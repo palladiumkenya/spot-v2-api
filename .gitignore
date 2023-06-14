@@ -1,0 +1,7 @@
+node_modules
+.env
+db/config/config.json
+
+venv
+__pycache__/*
+app/__pycache__/*
