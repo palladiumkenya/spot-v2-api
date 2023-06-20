@@ -1,9 +1,12 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from app import models, fact_ct_dhis2, fact_hts_dhis2, fact_pmtct_dhis2
-from .database import engine
-
-models.Base.metadata.create_all(bind=engine)
+import asyncio
+import aiocron
+from app.routers import mockapis
+from app.routers import notices
+from app.routers import facilities
+from app.api.facilities import get_all_facilities
+from app.consumer.testconsumer import consume_messages
 
 app = FastAPI()
 
@@ -19,13 +22,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.on_event("startup")
+async def startup_event():
+    # Start consuming messages on application startup
+    asyncio.create_task(consume_messages())
 
-app.include_router(fact_ct_dhis2.router, tags=['CT DHIS2'], prefix='/api')
-app.include_router(fact_hts_dhis2.router, tags=['HTS DHIS2'], prefix='/api')
-app.include_router(fact_pmtct_dhis2.router, tags=['PMTCT DHIS2'], prefix='/api')
 
+    # Schedule the task to run every 4 hrs
+    cron = aiocron.crontab('0 */4 * * *', func=get_all_facilities)
+    await asyncio.sleep(1)
+    cron.start()
+
+# ...other routes and application code...
+app.include_router(mockapis.router)
+app.include_router(facilities.router, tags=['Facilities'], prefix='/api/update_facilities')
+app.include_router(notices.router, tags=['Notices'], prefix='/api/notices')
 
 @app.get("/api/healthchecker")
 def root():
-    return {"message": "Welcome to FastAPI with DHIS2/3pm Pull"}
+    return {"message": "Welcome to SPOTv2, we are up and running"}
 
+# Run the FastAPI application
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

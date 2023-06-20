@@ -1,21 +1,14 @@
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from .config import settings
+from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import mongo_client
+import pymongo
+from app.config.config import settings
 
-SQL_DATABASE_URL = f'mssql+pymssql://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB}'
+print('Connecting to MongoDB...')
+client = mongo_client.MongoClient(settings.MONGODB_URL)
+print('Connected to MongoDB...')
 
-engine = create_engine(
-    SQL_DATABASE_URL, echo=True, connect_args={}
-)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-Base = declarative_base()
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+db = client[settings.DB]
+Facility = db.facilities
+Facility.create_index([("mfl_code", pymongo.ASCENDING)], unique=True)
+Notices = db.notices
+Notices.create_index([("rank", pymongo.ASCENDING)], unique=False)
