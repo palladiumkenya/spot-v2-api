@@ -12,3 +12,5 @@ Facility = db.facilities
 Facility.create_index([("mfl_code", pymongo.ASCENDING)], unique=True)
 Notices = db.notices
 Notices.create_index([("rank", pymongo.ASCENDING)], unique=False)
+Indicators = db.indicators
+Indicators.create_index([("created_at", pymongo.DESCENDING)], unique=False)

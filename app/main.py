@@ -6,7 +6,8 @@ from app.routers import mockapis
 from app.routers import notices
 from app.routers import facilities
 from app.api.facilities import get_all_facilities
-from app.consumer.testconsumer import consume_messages
+# from app.consumer.testConsumer import consume_messages
+from app.consumer.indicatorConsumer import consume_messages
 
 app = FastAPI()
 

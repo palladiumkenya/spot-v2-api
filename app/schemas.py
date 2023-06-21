@@ -1,6 +1,7 @@
 from typing import Optional
 from pydantic import BaseModel, Field
 from bson.objectid import ObjectId
+from datetime import datetime
 
 class FacilityBaseSchema(BaseModel):
     id: str
@@ -27,4 +28,20 @@ class NoticesBaseSchema(BaseModel):
 
     class Config:
         extra = 'allow'
-        # orm_mode = True
+        orm_mode = True
+
+class IndicatorsBaseSchema(BaseModel):
+    mfl_code: int
+    facility_manifest_id: str
+    name: str
+    emr_value: str
+    emr_indicator_date: datetime
+    dwh_value: Optional[str] = None
+    dwh_indicator_date: Optional[datetime] = None
+    created_at: datetime = datetime.now().isoformat()
+    is_current: bool = True
+
+    class Config:
+        extra = 'allow'
+        orm_mode = True
+        json_encoders = {ObjectId: str}
