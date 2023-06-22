@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from app.schemas import NoticesBaseSchema
-from app.serializers.noticesSerializer import noticeEntity, noticesListEntity
+from app.serializers.noticeSerializer import noticesListEntity
 from app.database import Notices
 
 

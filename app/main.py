@@ -5,6 +5,7 @@ import aiocron
 from app.routers import mockapis
 from app.routers import notices
 from app.routers import facilities
+from app.routers import indicators
 from app.api.facilities import get_all_facilities
 # from app.consumer.testConsumer import consume_messages
 from app.consumer.indicatorConsumer import consume_messages
@@ -28,7 +29,6 @@ async def startup_event():
     # Start consuming messages on application startup
     asyncio.create_task(consume_messages())
 
-
     # Schedule the task to run every 4 hrs
     cron = aiocron.crontab('0 */4 * * *', func=get_all_facilities)
     await asyncio.sleep(1)
@@ -38,6 +38,7 @@ async def startup_event():
 app.include_router(mockapis.router)
 app.include_router(facilities.router, tags=['Facilities'], prefix='/api/update_facilities')
 app.include_router(notices.router, tags=['Notices'], prefix='/api/notices')
+app.include_router(indicators.router, tags=['Indicators'], prefix='/api/indicators')
 
 @app.get("/api/healthchecker")
 def root():
