@@ -32,4 +32,4 @@ RUN chmod +x /app/cron_script.sh
 # RUN crontab /app/crontab.txt
 
 # Command to run the application and start the cron job
-CMD /app/cron_script.sh && uvicorn app.main:app --host 0.0.0.0 --port 4141
+CMD /app/cron_script.sh && uvicorn app.main:app --host 0.0.0.0 --port 2121
