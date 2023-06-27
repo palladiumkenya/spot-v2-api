@@ -38,7 +38,7 @@ class IndicatorsBaseSchema(BaseModel):
     emr_indicator_date: datetime
     dwh_value: Optional[str] = None
     dwh_indicator_date: Optional[datetime] = None
-    created_at: datetime = datetime.now().isoformat()
+    created_at: datetime = datetime.now()
     is_current: bool = True
 
     class Config:
@@ -47,29 +47,29 @@ class IndicatorsBaseSchema(BaseModel):
         json_encoders = {ObjectId: str}
 
 class ExtractSchema(BaseModel):
-    _id: str
+    id: str = Field(alias='id')
     name: str
     display: str
     isPatient: bool
     rank: int
+    
+    class Config:
+        orm_mode = True
 
 class DocketSchema(BaseModel):
-    _id: str
     name: str
     display: str
     extracts: List[ExtractSchema]
 
 class ProfilesSchema(BaseModel):
-    _id: str
     mfl_code: int
     docket_id: str
     stage: str
     session: str
     is_current: bool
-    created_at: datetime = datetime.now().isoformat()
+    created_at: datetime = datetime.now()
 
 class ManifestsSchema(BaseModel):
-    _id: str
     manifest_id: str
     mfl_code: int
     docket_id: str
@@ -77,10 +77,15 @@ class ManifestsSchema(BaseModel):
     session: str
     received: int
     expected: int
-    queued: int
+    queued: Optional[int] = None
     start: datetime
-    end: datetime
-    receivedDate: datetime
-    queuedDate: datetime
+    end: Optional[datetime] = None
+    receivedDate: Optional[datetime] = None
+    queuedDate: Optional[datetime] = None
     is_current: bool
-    created_at: datetime = datetime.now().isoformat()
+    created_at: datetime = datetime.now()
+    
+    class Config:
+        extra = 'allow'
+        orm_mode = True
+        json_encoders = {ObjectId: str}

@@ -7,6 +7,7 @@ from app.routers import notices
 from app.routers import facilities
 from app.routers import indicators
 from app.api.facilities import get_all_facilities
+from app import seeder
 # from app.consumer.testConsumer import consume_messages
 from app.consumer.indicatorConsumer import consume_messages
 
@@ -28,6 +29,9 @@ app.add_middleware(
 async def startup_event():
     # Start consuming messages on application startup
     asyncio.create_task(consume_messages())
+    
+    # Seed the data into the database
+    seeder.seed()
 
     # Schedule the task to run every 4 hrs
     cron = aiocron.crontab('0 */4 * * *', func=get_all_facilities)
