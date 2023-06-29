@@ -82,7 +82,7 @@ class ManifestsSchema(BaseModel):
     end: Optional[datetime] = None
     receivedDate: Optional[datetime] = None
     queuedDate: Optional[datetime] = None
-    is_current: bool
+    is_current: bool = True
     created_at: datetime = datetime.now()
     
     class Config:

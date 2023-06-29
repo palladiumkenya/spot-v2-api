@@ -6,6 +6,7 @@ from app.routers import mockapis
 from app.routers import notices
 from app.routers import facilities
 from app.routers import indicators
+from app.routers import profiles
 from app.api.facilities import get_all_facilities
 from app import seeder
 # from app.consumer.testConsumer import consume_messages
@@ -43,6 +44,7 @@ app.include_router(mockapis.router)
 app.include_router(facilities.router, tags=['Facilities'], prefix='/api/update_facilities')
 app.include_router(notices.router, tags=['Notices'], prefix='/api/notices')
 app.include_router(indicators.router, tags=['Indicators'], prefix='/api/indicators')
+app.include_router(profiles.router, tags=['Profiles'], prefix='/api/profiles')
 
 @app.get("/api/healthchecker")
 def root():

@@ -4,6 +4,7 @@ import random
 from app import schemas
 from app import database
 
+
 def seed_dockets(data):
     # Check if the collection is empty
     if database.Dockets.count_documents({}) == 0:
@@ -22,6 +23,7 @@ def seed_dockets(data):
     else:
         print("Dockets table already contains data. Skipping seed.")
 
+
 def seed_indicators(data):
     # Check if the collection is empty
     if database.Indicators.count_documents({}) == 0:
@@ -33,6 +35,7 @@ def seed_indicators(data):
         print("Indicators data seeded successfully.")
     else:
         print("Indicators table already contains data. Skipping seed.")
+
 
 def seed_notices(data):
     # Check if the collection is empty
@@ -46,21 +49,110 @@ def seed_notices(data):
     else:
         print("Notices table already contains data. Skipping seed.")
 
+
 def seed_manifest(data):
     # Check if the collection is empty
     if database.Manifests.count_documents({}) == 0:
-        docket = database.Dockets.aggregate([{ "$sample": { "size": 1 } }]).next()
-        extract_definitions =docket["extracts"]
+        docket = database.Dockets.aggregate([{"$sample": {"size": 1}}]).next()
+        extract_definitions = docket["extracts"]
         # Iterate over the data and insert each item into the collection
         for item in data:
             # Assign a random extract ID as the extract_id
             random_extract = random.choice(extract_definitions)["id"]
             # Create the ManifestsSchema object with the random docket_id
-            schema = schemas.ManifestsSchema(**item, docket_id=str(docket["_id"]), extract_id= random_extract)
+            schema = schemas.ManifestsSchema(
+                **item, docket_id=str(docket["_id"]), extract_id=random_extract)
             database.Manifests.insert_one(schema.dict())
         print("Manifests data seeded successfully.")
     else:
         print("Manifests table already contains data. Skipping seed.")
+
+
+def create_profiles():
+    if "profiles_vw" not in database.db.list_collection_names():
+        pipeline = [
+            {
+                "$match": {"is_current": True}
+            },
+            {
+                "$lookup": {
+                    "from": "facilities",
+                    "localField": "mfl_code",
+                    "foreignField": "mfl_code",
+                    "as": "facility_info"
+                }
+            },
+            {
+                "$unwind": "$facility_info"
+            },
+            {
+                "$lookup": {
+                    "from": "dockets",
+                    "localField": "docket_id",
+                    "foreignField": "_id",
+                    "as": "docket_info"
+                }
+            },
+            {
+                "$unwind": "$docket_info"  # Convert docket_info array to object
+            },
+            {
+                "$group": {
+                    "_id": "$facility_info._id",  # Group by facility's _id
+                    "facility": {"$first": "$facility_info.name"},
+                    "partner": {"$first": "$facility_info.partner"},
+                    "county": {"$first": "$facility_info.county"},
+                    "subcounty": {"$first": "$facility_info.subcounty"},
+                    "docket": {"$first": "$docket_info.name"},
+                    "totalReceived": {"$sum": {"$ifNull": ["$received", 0]}},
+                    "totalExpected": {"$sum": {"$ifNull": ["$expected", 0]}},
+                    "totalQueued": {"$sum": {"$ifNull": ["$queued", 0]}}
+                }
+            },
+            {
+                "$addFields": {
+                    "status": {
+                        "$switch": {
+                            "branches": [
+                                {
+                                    "case": {"$eq": ["$totalQueued", "$totalReceived"]},
+                                    "then": "Processed"
+                                },
+                                {
+                                    "case": {"$eq": ["$totalReceived", "$totalExpected"]},
+                                    "then": "Queued For Processing"
+                                },
+                                {
+                                    "case": {"$eq": ["$totalReceived", 0]},
+                                    "then": "Upload Not Started"
+                                }
+                            ],
+                            "default": "Upload In Progress..."
+                        }
+                    }
+                }
+            },
+            {
+                "$project": {
+                    "_id": 0,
+                    "facility": 1,
+                    "partner": 1,
+                    "county": 1,
+                    "subcounty": 1,
+                    "docket": 1,
+                    "status": 1,
+                    "updated": "",
+                    "totalExpected": 1,
+                    "totalReceived": 1,
+                    "totalQueued": 1,
+                }
+            }
+        ]
+        
+        database.db.command({"create": "profiles_vw", "viewOn":"manifests", "pipeline":pipeline})
+        print("Profiles_vw data seeded successfully.")
+    else:
+        print("Profiles_vw already exists data. Skipping seed.")
 
 
 # Define the data to seed
@@ -70,8 +162,7 @@ dockets = [
         "display": "NDWH",
         "extracts": [
             {"id": str(ObjectId()), "name": "PatientExtract", "display": "All Patients", "isPatient": True, "rank": 1},
-            {"id": str(ObjectId()), "name": "PatientArtExtract",
-                "display": "ART Patients", "isPatient": False, "rank": 2},
+            {"id": str(ObjectId()), "name": "PatientArtExtract", "display": "ART Patients", "isPatient": False, "rank": 2},
             {"id": str(ObjectId()), "name": "PatientBaselineExtract",
                 "display": "Patient Baselines", "isPatient": False, "rank": 3},
             {"id": str(ObjectId()), "name": "PatientStatusExtract",
@@ -205,34 +296,35 @@ indicators = [
 
 notices = [
     {
-		"message": "It may take upto 1 HOUR for data to be processed and displayed after being SENT",
-		"rank": 1,
-		"level": 1,
-		"title": ""
+        "message": "It may take upto 1 HOUR for data to be processed and displayed after being SENT",
+        "rank": 1,
+        "level": 1,
+        "title": ""
     },
     {
-		"message": "The last refresh was on Tue Jun 20 2023",
-		"rank": 1,
-		"level": 2,
-		"title": "DWH REFRESH"
+        "message": "The last refresh was on Tue Jun 20 2023",
+        "rank": 1,
+        "level": 2,
+        "title": "DWH REFRESH"
     }
 ]
 
 manifests = [
-	{
-		"manifest_id": str(ObjectId()),
-		"mfl_code": 12663,
-		"session": str(ObjectId()),
-		"received": 240,
-		"expected": 3400,
-		"queued": None,
-		"start": datetime.now(),
-		"end": datetime.now(),
-		"receivedDate": None,
-		"queuedDate": None,
-		"is_current": False
+    {
+        "manifest_id": str(ObjectId()),
+        "mfl_code": 12663,
+        "session": str(ObjectId()),
+        "received": 240,
+        "expected": 3400,
+        "queued": None,
+        "start": datetime.now(),
+        "end": datetime.now(),
+        "receivedDate": None,
+        "queuedDate": None,
+        "is_current": False
     }
 ]
+
 
 def seed():
     # Seed the data into the database
@@ -240,3 +332,4 @@ def seed():
     seed_indicators(indicators)
     seed_notices(notices)
     seed_manifest(manifests)
+    create_profiles()
