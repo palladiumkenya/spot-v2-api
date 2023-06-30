@@ -6,6 +6,7 @@ from app.routers import mockapis
 from app.routers import notices
 from app.routers import facilities
 from app.routers import indicators
+from app.routers import manifests
 from app.routers import profiles
 from app.api.facilities import get_all_facilities
 from app import seeder
@@ -45,6 +46,7 @@ app.include_router(facilities.router, tags=['Facilities'], prefix='/api/update_f
 app.include_router(notices.router, tags=['Notices'], prefix='/api/notices')
 app.include_router(indicators.router, tags=['Indicators'], prefix='/api/indicators')
 app.include_router(profiles.router, tags=['Profiles'], prefix='/api/profiles')
+app.include_router(manifests.router, tags=['Manifests'], prefix='/api/manifests')
 
 @app.get("/api/healthchecker")
 def root():

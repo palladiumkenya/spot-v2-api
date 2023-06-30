@@ -84,6 +84,7 @@ class ManifestsSchema(BaseModel):
     queuedDate: Optional[datetime] = None
     is_current: bool = True
     created_at: datetime = datetime.now()
+    updated_at: datetime = datetime.now()
     
     class Config:
         extra = 'allow'

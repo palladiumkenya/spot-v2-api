@@ -67,7 +67,7 @@ def seed_manifest(data):
     else:
         print("Manifests table already contains data. Skipping seed.")
 
-
+## TODO: WORK ON THE STATUS CONDITION BETTER TO START WITH UPLOADING
 def create_profiles():
     if "profiles_vw" not in database.db.list_collection_names():
         pipeline = [
@@ -97,13 +97,23 @@ def create_profiles():
                 "$unwind": "$docket_info"  # Convert docket_info array to object
             },
             {
+                "$sort": {
+                    "updated_at": -1
+                }
+            },
+            {
                 "$group": {
-                    "_id": "$facility_info._id",  # Group by facility's _id
+                    "_id": {
+						"facility": "$facility_info._id",
+						"docket": "$docket_info._id"
+					},  # Group by facility's _id & docket's _id
                     "facility": {"$first": "$facility_info.name"},
+                    "mfl_code": {"$first": "$facility_info.mfl_code"},
                     "partner": {"$first": "$facility_info.partner"},
                     "county": {"$first": "$facility_info.county"},
                     "subcounty": {"$first": "$facility_info.subcounty"},
                     "docket": {"$first": "$docket_info.name"},
+                    "updated_at": {"$first": "$updated_at"},
                     "totalReceived": {"$sum": {"$ifNull": ["$received", 0]}},
                     "totalExpected": {"$sum": {"$ifNull": ["$expected", 0]}},
                     "totalQueued": {"$sum": {"$ifNull": ["$queued", 0]}}
@@ -136,15 +146,21 @@ def create_profiles():
                 "$project": {
                     "_id": 0,
                     "facility": 1,
+                    "mfl_code": 1,
                     "partner": 1,
+                    "updated_at": 1,
                     "county": 1,
                     "subcounty": 1,
                     "docket": 1,
                     "status": 1,
-                    "updated": "",
                     "totalExpected": 1,
                     "totalReceived": 1,
                     "totalQueued": 1,
+                }
+            },
+            {
+                "$sort": {
+                    "updated_at": -1
                 }
             }
         ]
