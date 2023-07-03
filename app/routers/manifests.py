@@ -172,3 +172,43 @@ async def get_extracts_progress(code: int):
 	manifests = manifestListEntity(Manifests.aggregate(pipeline))
 	return {'manifests': manifests}
 
+
+@router.get("/{code}")
+async def get_upload_history(code: int):
+	pipeline = [
+		{
+			"$match": {
+				"mfl_code": code
+			}
+		},
+		{
+			"$lookup": {
+				"from": "facility",
+				"localField": "mfl_code",
+				"foreignField": "mfl_code",
+				"as": "facility_info"
+			}
+		},
+		{
+			"$lookup": {
+				"from": "docket",
+				"localField": "docket_id",
+				"foreignField": "_id",
+				"as": "docket_info"
+			}
+		},
+		{
+			"$unwind": "$facility_info"
+		},
+		{
+			"$unwind": "$docket_info"
+		},
+		{
+			"$match": {
+				"docket_info.extracts.isPatient": True
+			}
+		}
+	]
+	history = list(Manifests.aggregate(pipeline))
+	return {'history': history}
+
