@@ -11,7 +11,8 @@ from app.routers import profiles
 from app.api.facilities import get_all_facilities
 from app import seeder
 # from app.consumer.testConsumer import consume_messages
-from app.consumer.indicatorConsumer import consume_messages
+from app.consumer import indicatorConsumer
+from app.consumer import manifestConsumer
 
 app = FastAPI()
 
@@ -30,7 +31,8 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup_event():
     # Start consuming messages on application startup
-    asyncio.create_task(consume_messages())
+    asyncio.create_task(indicatorConsumer.consume_messages())
+    asyncio.create_task(manifestConsumer.consume_messages())
     
     # Seed the data into the database
     seeder.seed()

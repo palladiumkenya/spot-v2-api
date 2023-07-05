@@ -1,7 +1,8 @@
 from typing import Optional, List
 from pydantic import BaseModel, Field
-from bson.objectid import ObjectId
+# from bson.objectid import ObjectId
 from datetime import datetime
+from bson import ObjectId
 
 class FacilityBaseSchema(BaseModel):
     id: str
@@ -72,21 +73,22 @@ class ProfilesSchema(BaseModel):
 class ManifestsSchema(BaseModel):
     manifest_id: str
     mfl_code: int
-    docket_id: str
+    docket_id: ObjectId
     extract_id: str
     session: str
-    received: int
-    expected: int
+    received: Optional[int] = None
+    expected: Optional[int] = 0
     queued: Optional[int] = None
     start: datetime
     end: Optional[datetime] = None
     receivedDate: Optional[datetime] = None
     queuedDate: Optional[datetime] = None
-    is_current: bool = True
+    is_current: Optional[bool] = True
     created_at: datetime = datetime.now()
     updated_at: datetime = datetime.now()
     
     class Config:
+        arbitrary_types_allowed = True
         extra = 'allow'
         orm_mode = True
         json_encoders = {ObjectId: str}
