@@ -42,7 +42,6 @@ async def process_message(message: Message):
 					manifest_data["end"] = log_value["End"]
 				elif "ExtractCargos" in log_value and isinstance(log_value["ExtractCargos"], list):
 					for cargo in log_value["ExtractCargos"]:
-						print(cargo)
 						pipeline = [
 							{
 								"$match": { "extracts.name": cargo["Name"] }
@@ -73,18 +72,15 @@ async def process_message(message: Message):
 								"extract_id": docket["extractId"],
 							}
 						)
-		print(stats_data)
+
 		for stat in stats_data:
 			manifest_data.update(stat)
 			try:
 				# Add extra columns
 				manifest_data["created_at"] = datetime.now()
 
-				# Find documents with matching mflcode and is_current is false
-				matching_documents = Manifests.find({"mfl_code": manifest_data["mfl_code"], "is_current": True, "extract_id": manifest_data["extract_id"] })
-
 				validated_data = schemas.ManifestsSchema(**manifest_data)
-				print(validated_data)
+
 				# Start a MongoDB session for transactions
 				with client.start_session() as session:
 					# Start a transaction

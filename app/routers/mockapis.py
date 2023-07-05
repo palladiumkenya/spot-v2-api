@@ -73,7 +73,7 @@ async def send_mock_indicator():
         "stage": "DWH",
         "name": "TX_NEW",
         "dwh_value": 22,
-        "dwh_indicator_date": datetime.now().isoformat(),
+        "dwh_indicator_date": datetime.now(),
     },
     ]
 
