@@ -86,6 +86,7 @@ class ManifestsSchema(BaseModel):
     is_current: Optional[bool] = True
     created_at: datetime = datetime.now()
     updated_at: datetime = datetime.now()
+    log_date: Optional[datetime] = None
     
     class Config:
         arbitrary_types_allowed = True

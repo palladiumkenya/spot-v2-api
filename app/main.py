@@ -13,6 +13,7 @@ from app import seeder
 # from app.consumer.testConsumer import consume_messages
 from app.consumer import indicatorConsumer
 from app.consumer import manifestConsumer
+from app.consumer import extractConsumer
 
 app = FastAPI()
 
@@ -33,14 +34,16 @@ async def startup_event():
     # Start consuming messages on application startup
     asyncio.create_task(indicatorConsumer.consume_messages())
     asyncio.create_task(manifestConsumer.consume_messages())
+    asyncio.create_task(extractConsumer.consume_messages())
     
     # Seed the data into the database
     seeder.seed()
 
     # Schedule the task to run every 4 hrs
-    cron = aiocron.crontab('0 */4 * * *', func=get_all_facilities)
-    await asyncio.sleep(1)
-    cron.start()
+    ## TODO: LOOK FOR EFFICIENT WAY
+    # cron = aiocron.crontab('0 */4 * * *', func=get_all_facilities)
+    # await asyncio.sleep(1)
+    # cron.start()
 
 # ...other routes and application code...
 app.include_router(mockapis.router)

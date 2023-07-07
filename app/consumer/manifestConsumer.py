@@ -5,7 +5,6 @@ from app.config.config import settings
 from app.database import Manifests, Dockets, client
 from app import schemas
 
-
 async def process_message(message: Message):
 	# Process the received message
 	body = message.body.decode()
@@ -68,8 +67,11 @@ async def process_message(message: Message):
 						stats_data.append(
 							{
 								"expected": cargo["Stats"],
+								"received": 0,
+								"queued": 0,
 								"docket_id": docket["_id"],
 								"extract_id": docket["extractId"],
+								"log_date": value["LogDate"],
 							}
 						)
 
@@ -98,7 +100,6 @@ async def process_message(message: Message):
 						)
 						# Insert new document with is_current set to true
 						Manifests.insert_one(validated_data.dict())
-
 
 						# Commit the transaction
 						session.commit_transaction()
@@ -135,7 +136,6 @@ async def process_message(message: Message):
 
 
 async def consume_messages():
-
 	# Connect to RabbitMQ
 	connection = await connect(settings.RABBIT_URL)
 
