@@ -173,39 +173,53 @@ async def get_extracts_progress(code: int):
 	return {'manifests': manifests}
 
 
-@router.get("/{code}")
+@router.get("/history/{code}")
 async def get_upload_history(code: int):
 	pipeline = [
 		{
-			"$match": {
-				"mfl_code": code
-			}
+			"$match": { "mfl_code": code }
 		},
 		{
 			"$lookup": {
-				"from": "facility",
-				"localField": "mfl_code",
-				"foreignField": "mfl_code",
-				"as": "facility_info"
-			}
-		},
-		{
-			"$lookup": {
-				"from": "docket",
+				"from": "dockets",
 				"localField": "docket_id",
 				"foreignField": "_id",
-				"as": "docket_info"
+				"as": "docket"
 			}
 		},
 		{
-			"$unwind": "$facility_info"
-		},
-		{
-			"$unwind": "$docket_info"
+			"$unwind": "$docket"
 		},
 		{
 			"$match": {
-				"docket_info.extracts.isPatient": True
+				"$expr": {
+					"$in": [
+						"$extract_id",
+						{
+							"$map": {
+								"input": {
+									"$filter": {
+										"input": "$docket.extracts",
+										"as": "extract",
+										"cond": {
+											"$eq": ["$$extract.isPatient", True]
+										}
+									}
+								},
+								"as": "extract",
+								"in": "$$extract.id"
+							}
+						}
+					]
+				}
+			}
+		},
+		{
+			"$project": {
+				"_id": 0,
+				"received":1,
+				"log_date": 1,
+				"docket": "$docket.display"
 			}
 		}
 	]
