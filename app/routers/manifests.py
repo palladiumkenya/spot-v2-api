@@ -47,7 +47,7 @@ async def get_extracts_progress():
 		{"$addFields": {
 			"status": {
 				"$cond": [
-					{"$eq": ["$queued", "$received"]},
+					{"$eq": ["$queued", "$expected"]},
 					"Processed",
 					{"$cond": [
 						{"$eq": ["$received", "$expected"]},

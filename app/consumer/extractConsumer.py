@@ -42,8 +42,13 @@ async def process_message(message: Message):
 					"extractId": { "$arrayElemAt": ["$extractId.id", 0] }
 				}
 			}
-		]
-		docket_info = Dockets.aggregate(pipeline).next()
+		]# Execute the aggregation pipeline and retrieve the first document
+		try:
+			docket_info = Dockets.aggregate(pipeline).next()
+		except StopIteration:
+			# Handle the case where no matching document is found
+			docket_info= {"extractId":None}
+			print("No document found for the given ExtractName.")
 		# Start a MongoDB session for transactions
 		with client.start_session() as session:
 			# Start a transaction
@@ -52,12 +57,20 @@ async def process_message(message: Message):
 				# Perform rollback on failure flag
 				rollback = False
 
-				# Update where document matches
-				Manifests.update_one(
-					{"mfl_code": body_data["SiteCode"], "is_current": True, "extract_id": docket_info["extractId"] },
-					{"$inc": {"received": body_data["PatientPks"]}, "$set": {"updated_at": datetime.now(), "receivedDate": datetime.now()}}, 
-					upsert=True
-				)
+				if 'TotalExtractsStaged' in body_data:
+					# Update where document matches
+					Manifests.update_one(
+						{"mfl_code": body_data["SiteCode"], "is_current": True, "extract_id": docket_info["extractId"] },
+						{"$inc": {"received": body_data["TotalExtractsStaged"]}, "$set": {"updated_at": datetime.now(), "receivedDate": datetime.now()}}, 
+						upsert=True
+					)
+				if 'TotalExtractsProcessed' in body_data:
+					# Update where document matches
+					Manifests.update_one(
+						{"mfl_code": body_data["SiteCode"], "is_current": True, "extract_id": docket_info["extractId"] },
+						{"$inc": {"queued": body_data["TotalExtractsProcessed"]}, "$set": {"updated_at": datetime.now(), "queuedDate": datetime.now()}}, 
+						upsert=True
+					)
 
 				# Commit the transaction
 				session.commit_transaction()
@@ -74,11 +87,11 @@ async def process_message(message: Message):
 
 		# Check if rollback occurred
 		if rollback:
-			logger.error(f"---Inserting EXTRACT: {body_data['ExtractName']} SiteCode: {body_data['SiteCode']} failed.---")
+			logger.error(f"---UPDATING EXTRACT: {body_data['ExtractName']} SiteCode: {body_data['SiteCode']} failed.---")
 			await message.reject() # Reject and discard the message
 			return
 		else:
-			print(f"+++Inserting EXTRACT: {body_data['ExtractName']} SiteCode: {body_data['SiteCode']} successful+++")
+			print(f"+++UPDATING EXTRACT: {body_data['ExtractName']} SiteCode: {body_data['SiteCode']} successful+++")
 	except Exception as e:
 		logger.error(e, exc_info=True)
 		await message.reject() # Reject and discard the message

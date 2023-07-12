@@ -2,7 +2,7 @@ from aio_pika import connect, Message, ExchangeType
 from datetime import datetime
 import json
 from app.config.config import settings
-from app.database import Manifests, Dockets, client
+from app.database import Manifests, Dockets, FacilityMetrics, client
 from app import schemas
 
 async def process_message(message: Message):
@@ -40,6 +40,9 @@ async def process_message(message: Message):
 				elif log_value["Name"] == "CTSendEnd":
 					manifest_data["end"] = log_value["End"]
 				elif "ExtractCargos" in log_value and isinstance(log_value["ExtractCargos"], list):
+					facility_metrics = {
+						"dwapi_version": log_value["Version"]
+					}
 					for cargo in log_value["ExtractCargos"]:
 						pipeline = [
 							{
@@ -128,9 +131,12 @@ async def process_message(message: Message):
 		print("Invalid JSON format:", e)
 		await message.reject()  # Reject and discard the message
 		return
+	facility_metrics["mfl_code"] = manifest_data["mfl_code"]
+	facility_metrics["metric"] = "DWAPI Version"
+	facility_metrics["created_at"] = datetime.now()
 
-	# Validate the parsed message data against the schema
-	
+	FacilityMetrics.insert_one(facility_metrics)
+
 	# Acknowledge the message
 	await message.ack()
 

@@ -125,7 +125,7 @@ def create_profiles():
                         "$switch": {
                             "branches": [
                                 {
-                                    "case": {"$eq": ["$totalQueued", "$totalReceived"]},
+                                    "case": {"$eq": ["$totalQueued", "$totalExpected"]},
                                     "then": "Processed"
                                 },
                                 {
@@ -134,7 +134,7 @@ def create_profiles():
                                 },
                                 {
                                     "case": {"$eq": ["$totalReceived", 0]},
-                                    "then": "Upload Not Started"
+                                    "then": "Upload In Progress..."
                                 }
                             ],
                             "default": "Upload In Progress..."
@@ -164,7 +164,6 @@ def create_profiles():
                 }
             }
         ]
-        
         database.db.command({"create": "profiles_vw", "viewOn":"manifests", "pipeline":pipeline})
         print("Profiles_vw data seeded successfully.")
     else:
