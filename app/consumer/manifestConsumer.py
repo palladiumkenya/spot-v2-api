@@ -4,7 +4,7 @@ import json
 from app.config.config import settings
 from app.database import Manifests, Dockets, FacilityMetrics, client
 from app import schemas
-
+## TODO:: FIND A WAY TO SAVE MISSING AND FIND A WAY TO SAVE DIFFERENTIAL
 async def process_message(message: Message):
 	# Process the received message
 	body = message.body.decode()
@@ -66,7 +66,15 @@ async def process_message(message: Message):
 								}
 							}
 						]
-						docket = Dockets.aggregate(pipeline).next()
+						docket = Dockets.aggregate(pipeline)
+						try:
+							docket = next(docket)
+							print(cargo["Name"])
+							
+						except StopIteration:
+							# Handle the case when there are no results
+							docket = None
+							print("No results found.")
 						stats_data.append(
 							{
 								"expected": cargo["Stats"],
@@ -80,6 +88,7 @@ async def process_message(message: Message):
 
 		for stat in stats_data:
 			manifest_data.update(stat)
+			print(manifest_data)
 			try:
 				# Add extra columns
 				manifest_data["created_at"] = datetime.now()

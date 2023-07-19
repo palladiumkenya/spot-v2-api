@@ -112,6 +112,7 @@ def create_profiles():
                     "partner": {"$first": "$facility_info.partner"},
                     "county": {"$first": "$facility_info.county"},
                     "subcounty": {"$first": "$facility_info.subcounty"},
+                    "agency": {"$first": "$facility_info.agency"},
                     "docket": {"$first": "$docket_info.name"},
                     "updated_at": {"$first": "$updated_at"},
                     "totalReceived": {"$sum": {"$ifNull": ["$received", 0]}},
@@ -151,6 +152,7 @@ def create_profiles():
                     "updated_at": 1,
                     "county": 1,
                     "subcounty": 1,
+                    "agency": 1,
                     "docket": 1,
                     "status": 1,
                     "totalExpected": 1,
@@ -168,7 +170,6 @@ def create_profiles():
         print("Profiles_vw data seeded successfully.")
     else:
         print("Profiles_vw already exists data. Skipping seed.")
-
 
 # Define the data to seed
 dockets = [

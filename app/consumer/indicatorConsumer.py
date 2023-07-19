@@ -88,7 +88,7 @@ async def consume_messages():
 
 	# Declare the queue and bind it to the exchange
 	queue = await channel.declare_queue("indicator.queue", durable=True)
-
+	
 	await queue.bind(exchange, routing_key="indicator.route")
 
 	# Start consuming messages from the queue
