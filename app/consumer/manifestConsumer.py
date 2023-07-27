@@ -1,8 +1,9 @@
 from aio_pika import connect, Message, ExchangeType
 from datetime import datetime
 import json
+from bson import ObjectId
 from app.config.config import settings
-from app.database import Manifests, Dockets, FacilityMetrics, client
+from app.database import Manifests, Dockets, FacilityMetrics, Log, client
 from app import schemas
 ## TODO:: FIND A WAY TO SAVE MISSING AND FIND A WAY TO SAVE DIFFERENTIAL
 async def process_message(message: Message):
@@ -10,6 +11,8 @@ async def process_message(message: Message):
 	body = message.body.decode()
 	print("Received message:", body)
 
+	id = ObjectId
+	Log.insert_one({"id": id, "body": body, "processed": False, "created_at": datetime.now(),  "queue": "manifest.queue"})
 	# Parse the message body as JSON
 	try:
 		body_data = json.loads(body)
@@ -69,11 +72,12 @@ async def process_message(message: Message):
 						docket = Dockets.aggregate(pipeline)
 						try:
 							docket = next(docket)
-							print(cargo["Name"])
-							
 						except StopIteration:
 							# Handle the case when there are no results
-							docket = None
+							docket = {
+								"extractId":cargo["Name"],
+								"_id":None,
+							}
 							print("No results found.")
 						stats_data.append(
 							{
@@ -145,7 +149,8 @@ async def process_message(message: Message):
 	facility_metrics["created_at"] = datetime.now()
 
 	FacilityMetrics.insert_one(facility_metrics)
-
+	
+	Log.update_one({"id": id}, {"processed_at": datetime.now(), "processed": True})
 	# Acknowledge the message
 	await message.ack()
 

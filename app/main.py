@@ -1,6 +1,7 @@
 from fastapi import FastAPI, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
+import aiormq
 import aiocron
 from app.routers import mockapis
 from app.routers import notices
@@ -31,11 +32,17 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup_event():
-    # Start consuming messages on application startup
-    asyncio.create_task(indicatorConsumer.consume_messages())
-    asyncio.create_task(manifestConsumer.consume_messages())
-    asyncio.create_task(extractConsumer.consume_messages())
-    
+    try:
+        # Start consuming messages on application startup
+        asyncio.create_task(indicatorConsumer.consume_messages())
+        asyncio.create_task(manifestConsumer.consume_messages())
+        asyncio.create_task(extractConsumer.consume_messages())
+    except aiormq.AMQPError as e:
+        print(f"Error occurred: {type(e).__name__}: {e}")
+        print("Retrying connection...")
+        # finally:
+        #     await asyncio.sleep(5)  # Wait for 5 seconds before retrying the connection
+
     # Seed the data into the database
     seeder.seed()
 

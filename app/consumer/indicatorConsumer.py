@@ -1,8 +1,9 @@
 from aio_pika import connect, Message, ExchangeType
 from datetime import datetime
 import json
+from bson import ObjectId
 from app.config.config import settings
-from app.database import Indicators
+from app.database import Indicators, Log
 from app import schemas
 
 
@@ -11,6 +12,8 @@ async def process_message(message: Message):
 	body = message.body.decode()
 	print("Received message:", body)
 
+	id = ObjectId
+	Log.insert_one({"id": id, "body": body, "processed": False, "created_at": datetime.now(),  "queue": "indicator.queue"})
 	# Parse the message body as JSON
 	try:
 		body_data = json.loads(body)
@@ -68,6 +71,8 @@ async def process_message(message: Message):
 			}
 		}
 		Indicators.update_one(filter_query, update_query)
+	
+	Log.update_one({"id": id}, {"processed_at": datetime.now(), "processed": True})
 	# Acknowledge the message
 	await message.ack()
 

@@ -1,8 +1,9 @@
 from aio_pika import connect, Message, ExchangeType
 from datetime import datetime
 import json
+from bson import ObjectId
 from app.config.config import settings
-from app.database import Dockets, Manifests, client
+from app.database import Dockets, Manifests, Log, client
 from app import schemas
 from app.logger import logger
 
@@ -12,6 +13,9 @@ async def process_message(message: Message):
 	# Process the received message
 	body = message.body.decode()
 	print("Received message:", body)
+
+	id = ObjectId
+	Log.insert_one({"id": id, "body": body, "processed": False, "created_at": datetime.now(), "queue": "extract.queue"})
 
 	# Parse the message body as JSON
 	try:
@@ -95,6 +99,8 @@ async def process_message(message: Message):
 	except Exception as e:
 		logger.error(e, exc_info=True)
 		await message.reject() # Reject and discard the message
+	
+	Log.update_one({"id": id}, {"processed_at": datetime.now(), "processed": True})
 
 	# Acknowledge the message
 	await message.ack()

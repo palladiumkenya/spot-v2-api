@@ -19,3 +19,4 @@ Dockets.create_index([("name", pymongo.ASCENDING)], unique=True)
 Manifests = db.manifests
 FacilityMetrics = db.facility_metrics
 Profiles = db.profiles_vw
+Log = db.messages_log
