@@ -8,9 +8,7 @@ def facilityEntity(facility) -> dict:
 		"agency": facility["agency"],
 		"lat": facility.get("lat", 0),
 		"lon": facility.get("lon", 0),
-        "name": facility["name"],
-        # "created_at": facility["created_at"],
-        # "updated_at": facility["updated_at"]
+		"name": facility["name"]
     }
 
 def facilityListEntity(facilities) -> list:

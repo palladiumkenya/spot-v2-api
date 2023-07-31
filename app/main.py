@@ -1,4 +1,4 @@
-from fastapi import FastAPI, BackgroundTasks
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 import aiormq
@@ -9,6 +9,7 @@ from app.routers import facilities
 from app.routers import indicators
 from app.routers import manifests
 from app.routers import profiles
+from app.routers import facility_metrics
 from app.api.facilities import get_all_facilities
 from app import seeder
 # from app.consumer.testConsumer import consume_messages
@@ -59,6 +60,7 @@ app.include_router(notices.router, tags=['Notices'], prefix='/api/notices')
 app.include_router(indicators.router, tags=['Indicators'], prefix='/api/indicators')
 app.include_router(profiles.router, tags=['Profiles'], prefix='/api/profiles')
 app.include_router(manifests.router, tags=['Manifests'], prefix='/api/manifests')
+app.include_router(facility_metrics.router, tags=['Facility Metrics'], prefix='/api/metrics')
 
 @app.get("/api/healthchecker")
 def root():
