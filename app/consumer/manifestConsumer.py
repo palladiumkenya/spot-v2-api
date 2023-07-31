@@ -9,9 +9,10 @@ from app import schemas
 async def process_message(message: Message):
 	# Process the received message
 	body = message.body.decode()
-	print("Received message:", body)
+	# print("Received message:", body)
+	facility_metrics = []
 
-	id = ObjectId
+	id = ObjectId()
 	Log.insert_one({"id": id, "body": body, "processed": False, "created_at": datetime.now(),  "queue": "manifest.queue"})
 	# Parse the message body as JSON
 	try:
@@ -31,6 +32,17 @@ async def process_message(message: Message):
 		}
 		stats_data = []
 		for metric in body_data["Metrics"]:
+			if metric["Type"] == 1 and metric["Name"] == "Metrics":
+				value = metric["Value"]
+				value = json.loads(value)
+				facility_metrics.append({
+					"metric": "EMR Version",
+					"value": value["EmrVersion"]
+				})
+				facility_metrics.append({
+					"metric": "EMR Type",
+					"value": value["EmrName"]
+				})
 			if metric["Type"] != 0 and metric["Name"] == "AppMetrics":
 				value = metric["Value"]
 
@@ -43,9 +55,10 @@ async def process_message(message: Message):
 				elif log_value["Name"] == "CTSendEnd":
 					manifest_data["end"] = log_value["End"]
 				elif "ExtractCargos" in log_value and isinstance(log_value["ExtractCargos"], list):
-					facility_metrics = {
-						"dwapi_version": log_value["Version"]
-					}
+					facility_metrics.append({
+						"metric": "DWAPI Version",
+						"value": log_value["Version"]
+					})
 					for cargo in log_value["ExtractCargos"]:
 						pipeline = [
 							{
@@ -144,13 +157,15 @@ async def process_message(message: Message):
 		print("Invalid JSON format:", e)
 		await message.reject()  # Reject and discard the message
 		return
-	facility_metrics["mfl_code"] = manifest_data["mfl_code"]
-	facility_metrics["metric"] = "DWAPI Version"
-	facility_metrics["created_at"] = datetime.now()
 
-	FacilityMetrics.insert_one(facility_metrics)
+	metrics = [{**d, "mfl_code": manifest_data["mfl_code"]} for d in facility_metrics]
+	metrics = [{**d, "created_at": datetime.now()} for d in metrics]
+	metrics = [{**d, "is_current": True} for d in metrics]
+
+	FacilityMetrics.update_many({"mfl_code": manifest_data["mfl_code"]}, {"$set": {"is_current": False}})
+	FacilityMetrics.insert_many(metrics)
 	
-	Log.update_one({"id": id}, {"processed_at": datetime.now(), "processed": True})
+	Log.update_one({"id": id}, {"$set": {"processed_at": datetime.now(), "processed": True}})
 	# Acknowledge the message
 	await message.ack()
 

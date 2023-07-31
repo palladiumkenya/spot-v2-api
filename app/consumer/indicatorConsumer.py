@@ -12,7 +12,7 @@ async def process_message(message: Message):
 	body = message.body.decode()
 	print("Received message:", body)
 
-	id = ObjectId
+	id = ObjectId()
 	Log.insert_one({"id": id, "body": body, "processed": False, "created_at": datetime.now(),  "queue": "indicator.queue"})
 	# Parse the message body as JSON
 	try:
@@ -50,6 +50,7 @@ async def process_message(message: Message):
 				filter_query = {
 					"name": validated_data.name,
 					"mfl_code": validated_data.mfl_code,
+					"is_current": True
 				}
 				update_query = {
 					"$set": {"is_current": False}
@@ -72,7 +73,7 @@ async def process_message(message: Message):
 		}
 		Indicators.update_one(filter_query, update_query)
 	
-	Log.update_one({"id": id}, {"processed_at": datetime.now(), "processed": True})
+	Log.update_one({"id": id}, {"$set": {"processed_at": datetime.now(), "processed": True}})
 	# Acknowledge the message
 	await message.ack()
 
