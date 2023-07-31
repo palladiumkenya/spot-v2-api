@@ -3,8 +3,7 @@ from datetime import datetime
 import json
 from bson import ObjectId
 from app.config.config import settings
-from app.database import Dockets, Manifests, Log, client
-from app import schemas
+from app.database import Dockets, Extracts, Log, client
 from app.logger import logger
 
 
@@ -14,7 +13,7 @@ async def process_message(message: Message):
 	body = message.body.decode()
 	print("Received message:", body)
 
-	id = ObjectId
+	id = ObjectId()
 	Log.insert_one({"id": id, "body": body, "processed": False, "created_at": datetime.now(), "queue": "extract.queue"})
 
 	# Parse the message body as JSON
@@ -46,7 +45,7 @@ async def process_message(message: Message):
 					"extractId": { "$arrayElemAt": ["$extractId.id", 0] }
 				}
 			}
-		]# Execute the aggregation pipeline and retrieve the first document
+		]
 		try:
 			docket_info = Dockets.aggregate(pipeline).next()
 		except StopIteration:
@@ -63,15 +62,15 @@ async def process_message(message: Message):
 
 				if 'TotalExtractsStaged' in body_data:
 					# Update where document matches
-					Manifests.update_one(
-						{"mfl_code": body_data["SiteCode"], "is_current": True, "extract_id": docket_info["extractId"] },
+					Extracts.update_one(
+						{"mfl_code": body_data["SiteCode"], "is_current": True, "extract_id": docket_info["extractId"], "docket_id": docket_info["_id"], "manifest_id": body_data["ManifestId"] },
 						{"$inc": {"received": body_data["TotalExtractsStaged"]}, "$set": {"updated_at": datetime.now(), "receivedDate": datetime.now()}}, 
 						upsert=True
 					)
 				if 'TotalExtractsProcessed' in body_data:
 					# Update where document matches
-					Manifests.update_one(
-						{"mfl_code": body_data["SiteCode"], "is_current": True, "extract_id": docket_info["extractId"] },
+					Extracts.update_one(
+						{"mfl_code": body_data["SiteCode"], "is_current": True, "extract_id": docket_info["extractId"], "docket_id": docket_info["_id"], "manifest_id": body_data["ManifestId"] },
 						{"$inc": {"queued": body_data["TotalExtractsProcessed"]}, "$set": {"updated_at": datetime.now(), "queuedDate": datetime.now()}}, 
 						upsert=True
 					)
@@ -100,7 +99,7 @@ async def process_message(message: Message):
 		logger.error(e, exc_info=True)
 		await message.reject() # Reject and discard the message
 	
-	Log.update_one({"id": id}, {"processed_at": datetime.now(), "processed": True})
+	Log.update_one({"id": id}, {"$set": {"processed_at": datetime.now(), "processed": True}})
 
 	# Acknowledge the message
 	await message.ack()

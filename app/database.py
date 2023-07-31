@@ -17,6 +17,7 @@ Indicators.create_index([("created_at", pymongo.DESCENDING)], unique=False)
 Dockets = db.dockets
 Dockets.create_index([("name", pymongo.ASCENDING)], unique=True)
 Manifests = db.manifests
+Extracts = db.extracts
 FacilityMetrics = db.facility_metrics
 Profiles = db.profiles_vw
 Log = db.messages_log
