@@ -76,6 +76,36 @@ def create_profiles():
             },
             {
                 "$lookup": {
+                    "from": "extracts",
+                    "let": {
+                        "manifest_id_field": "$manifest_id",
+                        "extract_id_field": "$extract_id",
+                        "mfl_code_field": "$mfl_code",
+                    },
+                    "pipeline": [
+                        {
+                            "$match": {
+                                "$expr": {
+                                    "$and": [
+                                        { "$eq": ["$manifest_id", "$$manifest_id_field"] },
+                                        { "$eq": ["$extract_id", "$$extract_id_field"] },
+                                        { "$eq": ["$mfl_code", "$$mfl_code_field"] },
+                                    ],
+                                },
+                            },
+                        },
+                    ],
+                    "as": "extracts",
+                },
+            },
+            {
+                "$unwind": {
+                    "path": "$extracts",
+                    "preserveNullAndEmptyArrays": True
+                }
+            },
+            {
+                "$lookup": {
                     "from": "facilities",
                     "localField": "mfl_code",
                     "foreignField": "mfl_code",
@@ -115,9 +145,9 @@ def create_profiles():
                     "agency": {"$first": "$facility_info.agency"},
                     "docket": {"$first": "$docket_info.name"},
                     "updated_at": {"$first": "$updated_at"},
-                    "totalReceived": {"$sum": {"$ifNull": ["$received", 0]}},
                     "totalExpected": {"$sum": {"$ifNull": ["$expected", 0]}},
-                    "totalQueued": {"$sum": {"$ifNull": ["$queued", 0]}}
+                    "totalReceived": {"$sum": {"$ifNull": ["$extracts.received", 0]}},
+                    "totalQueued": {"$sum": {"$ifNull": ["$extracts.queued", 0]}}
                 }
             },
             {

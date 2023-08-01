@@ -14,7 +14,7 @@ async def process_message(message: Message):
 	print("Received message:", body)
 
 	id = ObjectId()
-	Log.insert_one({"id": id, "body": body, "processed": False, "created_at": datetime.now(), "queue": "extract.queue"})
+	Log.insert_one({"id": id, "body": body, "processed": False, "created_at": datetime.now(), "queue": "extracts.queue"})
 
 	# Parse the message body as JSON
 	try:
@@ -50,7 +50,7 @@ async def process_message(message: Message):
 			docket_info = Dockets.aggregate(pipeline).next()
 		except StopIteration:
 			# Handle the case where no matching document is found
-			docket_info= {"extractId":None}
+			docket_info= {"extractId":None, "_id": None}
 			print("No document found for the given ExtractName.")
 		# Start a MongoDB session for transactions
 		with client.start_session() as session:
