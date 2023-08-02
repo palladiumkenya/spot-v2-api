@@ -10,6 +10,7 @@ from app.routers import indicators
 from app.routers import manifests
 from app.routers import profiles
 from app.routers import facility_metrics
+from app.routers import refresh_messages
 from app.api.facilities import get_all_facilities
 from app import seeder
 # from app.consumer.testConsumer import consume_messages
@@ -61,6 +62,7 @@ app.include_router(indicators.router, tags=['Indicators'], prefix='/api/indicato
 app.include_router(profiles.router, tags=['Profiles'], prefix='/api/profiles')
 app.include_router(manifests.router, tags=['Manifests'], prefix='/api/manifests')
 app.include_router(facility_metrics.router, tags=['Facility Metrics'], prefix='/api/metrics')
+app.include_router(refresh_messages.router, tags=['Resend Rabbit Messages'], prefix='/api/messages')
 
 @app.get("/api/healthchecker")
 def root():

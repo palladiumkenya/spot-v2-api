@@ -95,8 +95,6 @@ async def process_message(message: Message):
 						stats_data.append(
 							{
 								"expected": cargo["Stats"],
-								"received": 0,
-								"queued": 0,
 								"docket_id": docket["_id"],
 								"extract_id": docket["extractId"],
 								"log_date": value["LogDate"],
