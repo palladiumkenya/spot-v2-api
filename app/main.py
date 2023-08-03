@@ -34,6 +34,9 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup_event():
+    start_background_tasks()
+
+def start_background_tasks():
     try:
         # Start consuming messages on application startup
         asyncio.create_task(indicatorConsumer.consume_messages())
@@ -51,7 +54,7 @@ async def startup_event():
     # Schedule the task to run every 4 hrs
     ## TODO: LOOK FOR EFFICIENT WAY
     cron = aiocron.crontab('0 */4 * * *', func=get_all_facilities)
-    await asyncio.sleep(1)
+    asyncio.sleep(1)
     cron.start()
 
 # ...other routes and application code...

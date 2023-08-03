@@ -1,11 +1,8 @@
 from fastapi import APIRouter
 from aio_pika import connect, Message, ExchangeType
-from datetime import datetime
 import asyncio
-import json
 from app.config.config import settings
 from app.database import Log
-
 
 router = APIRouter()
 

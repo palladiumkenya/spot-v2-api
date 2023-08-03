@@ -35,14 +35,12 @@ async def process_message(message: Message):
 			if metric["Type"] == 1 and metric["Name"] == "Metrics":
 				value = metric["Value"]
 				value = json.loads(value)
-				facility_metrics.append({
-					"metric": "EMR Version",
-					"value": value["EmrVersion"]
-				})
-				facility_metrics.append({
-					"metric": "EMR Type",
-					"value": value["EmrName"]
-				})
+				facility_metrics.extend(
+					(
+						{"metric": "EMR Version", "value": value["EmrVersion"]},
+						{"metric": "EMR Type", "value": value["EmrName"]},
+					)
+				)
 			if metric["Type"] != 0 and metric["Name"] == "AppMetrics":
 				value = metric["Value"]
 
@@ -102,7 +100,7 @@ async def process_message(message: Message):
 						)
 
 		for stat in stats_data:
-			manifest_data.update(stat)
+			manifest_data |= stat
 			print(manifest_data)
 			try:
 				# Add extra columns
@@ -120,7 +118,7 @@ async def process_message(message: Message):
 						rollback = False
 
 						# Iterate over matching documents and update is_current to false
-					
+
 						Manifests.update_many(
 							{"mfl_code": manifest_data["mfl_code"], "is_current": True, "extract_id": manifest_data["extract_id"] },
 							{"$set": {"is_current": False}}
@@ -150,7 +148,7 @@ async def process_message(message: Message):
 				print("Invalid message format:", e)
 				await message.reject()  # Reject and discard the message
 				return
-	
+
 	except KeyError as e:
 		print("Invalid JSON format:", e)
 		await message.reject()  # Reject and discard the message
@@ -162,7 +160,7 @@ async def process_message(message: Message):
 
 	FacilityMetrics.update_many({"mfl_code": manifest_data["mfl_code"]}, {"$set": {"is_current": False}})
 	FacilityMetrics.insert_many(metrics)
-	
+
 	Log.update_one({"id": id}, {"$set": {"processed_at": datetime.now(), "processed": True}})
 	# Acknowledge the message
 	await message.ack()

@@ -23,7 +23,7 @@ async def get_all_facilities():
     documents = [facility.dict() for facility in facilities_data]
     
     for document in documents:
-        update_result = Facility.update_one(
+        Facility.update_one(
             {"mfl_code": document["mfl_code"]},
             {"$set": document},
             upsert=True
