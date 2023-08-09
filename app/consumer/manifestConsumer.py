@@ -12,8 +12,8 @@ async def process_message(message: Message):
 	# print("Received message:", body)
 	facility_metrics = []
 
-	id = ObjectId()
-	Log.insert_one({"id": id, "body": body, "processed": False, "created_at": datetime.now(),  "queue": "manifest.queue"})
+	log_id = ObjectId()
+	Log.insert_one({"id": log_id, "body": body, "processed": False, "created_at": datetime.now(),  "queue": "manifest.queue"})
 	# Parse the message body as JSON
 	try:
 		body_data = json.loads(body)
@@ -129,7 +129,7 @@ async def process_message(message: Message):
 						# Commit the transaction
 						session.commit_transaction()
 
-					except:
+					except Exception:
 						# Rollback the transaction if any exception occurs
 						session.abort_transaction()
 						rollback = True
@@ -161,7 +161,7 @@ async def process_message(message: Message):
 	FacilityMetrics.update_many({"mfl_code": manifest_data["mfl_code"]}, {"$set": {"is_current": False}})
 	FacilityMetrics.insert_many(metrics)
 
-	Log.update_one({"id": id}, {"$set": {"processed_at": datetime.now(), "processed": True}})
+	Log.update_one({"id": log_id}, {"$set": {"processed_at": datetime.now(), "processed": True}})
 	# Acknowledge the message
 	await message.ack()
 
