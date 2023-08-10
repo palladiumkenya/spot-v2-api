@@ -73,7 +73,7 @@ class ProfilesSchema(BaseModel):
 class ManifestsSchema(BaseModel):
     manifest_id: str
     mfl_code: int
-    docket_id: ObjectId
+    docket_id: Optional[ObjectId] = None
     extract_id: str
     session: str
     received: Optional[int] = None
