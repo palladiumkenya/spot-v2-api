@@ -33,7 +33,7 @@ class NoticesBaseSchema(BaseModel):
 
 class IndicatorsBaseSchema(BaseModel):
     mfl_code: int
-    facility_manifest_id: str
+    facility_manifest_id: Optional[str] = ''
     name: str
     emr_value: str
     emr_indicator_date: datetime
