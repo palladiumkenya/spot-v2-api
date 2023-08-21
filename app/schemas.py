@@ -21,7 +21,6 @@ class FacilityBaseSchema(BaseModel):
         orm_mode = True
 
 class NoticesBaseSchema(BaseModel):
-    id: str
     rank: int
     message: str
     title: str
