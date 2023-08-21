@@ -20,4 +20,5 @@ Manifests = db.manifests
 Extracts = db.extracts
 FacilityMetrics = db.facility_metrics
 Profiles = db.profiles_vw
+Handshake = db.handshake
 Log = db.messages_log

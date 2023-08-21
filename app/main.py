@@ -18,6 +18,7 @@ from app import seeder
 from app.consumer import indicatorConsumer
 from app.consumer import manifestConsumer
 from app.consumer import extractConsumer
+from app.consumer import handshakeConsumer
 
 app = FastAPI()
 
@@ -43,11 +44,12 @@ def start_background_tasks():
         asyncio.create_task(indicatorConsumer.consume_messages())
         asyncio.create_task(manifestConsumer.consume_messages())
         asyncio.create_task(extractConsumer.consume_messages())
+        asyncio.create_task(handshakeConsumer.consume_messages())
     except aiormq.AMQPError as e:
         print(f"Error occurred: {type(e).__name__}: {e}")
         print("Retrying connection...")
-        # finally:
-        #     await asyncio.sleep(5)  # Wait for 5 seconds before retrying the connection
+    finally:
+        asyncio.sleep(500)  # Wait for 500 seconds before retrying the connection
 
     # Seed the data into the database
     seeder.seed()
