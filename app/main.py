@@ -52,7 +52,7 @@ def start_background_tasks():
         asyncio.sleep(500)  # Wait for 500 seconds before retrying the connection
 
     # Seed the data into the database
-    seeder.seed()
+    # seeder.seed()
 
     # Schedule the task to run every 4 hrs
     ## TODO: LOOK FOR EFFICIENT WAY

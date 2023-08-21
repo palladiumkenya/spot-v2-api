@@ -61,7 +61,7 @@ def seed_manifest(data):
             random_extract = random.choice(extract_definitions)["id"]
             # Create the ManifestsSchema object with the random docket_id
             schema = schemas.ManifestsSchema(
-                **item, docket_id=str(docket["_id"]), extract_id=random_extract)
+                **item, docket_id=ObjectId(docket["_id"]), extract_id=random_extract)
             database.Manifests.insert_one(schema.dict())
         print("Manifests data seeded successfully.")
     else:
