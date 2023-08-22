@@ -144,7 +144,7 @@ def create_profiles():
                     "subcounty": {"$first": "$facility_info.subcounty"},
                     "agency": {"$first": "$facility_info.agency"},
                     "docket": {"$first": "$docket_info.name"},
-                    "updated_at": {"$first": "$updated_at"},
+                    "updated_at": {"$first": {"$ifNull": ["$extracts.updated_at", "$created_at"]}},
                     "totalExpected": {"$sum": {"$ifNull": ["$expected", 0]}},
                     "totalReceived": {"$sum": {"$ifNull": ["$extracts.received", 0]}},
                     "totalQueued": {"$sum": {"$ifNull": ["$extracts.queued", 0]}}

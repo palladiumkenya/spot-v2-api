@@ -232,7 +232,7 @@ async def get_extracts_progress(code: int):
                     "received": {"$ifNull": ["$extracts.received", 0]},
                     "queued": {"$ifNull": ["$extracts.queued", 0]},
                     "rank": "$extract_info.display.rank",
-                    "updated_at": "$updated_at"
+                    "updated_at": {"$ifNull": ["$extracts.updated_at", "$created_at"]}
                 }
             }
         }},
