@@ -67,7 +67,6 @@ def seed_manifest(data):
     else:
         print("Manifests table already contains data. Skipping seed.")
 
-## TODO: WORK ON THE STATUS CONDITION BETTER TO START WITH UPLOADING
 def create_profiles():
     if "profiles_vw" not in database.db.list_collection_names():
         pipeline = [
@@ -361,12 +360,8 @@ manifests = [
         "mfl_code": 12663,
         "session": str(ObjectId()),
         "received": 240,
-        "expected": 3400,
-        "queued": None,
         "start": datetime.now(),
         "end": datetime.now(),
-        "receivedDate": None,
-        "queuedDate": None,
         "is_current": False
     }
 ]

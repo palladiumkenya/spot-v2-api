@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 import aiormq
@@ -19,6 +19,7 @@ from app.consumer import indicatorConsumer
 from app.consumer import manifestConsumer
 from app.consumer import extractConsumer
 from app.consumer import handshakeConsumer
+from app.error_handler import *
 
 app = FastAPI()
 
@@ -33,6 +34,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_exception_handler(HTTPException, http_error_handler)
+app.add_exception_handler(Exception, tasks_error_handler)
 
 @app.on_event("startup")
 async def startup_event():
