@@ -124,13 +124,9 @@ async def process_message(message: Message):
 		print("Invalid JSON format:", e)
 		await message.reject()  # Reject and discard the message
 		return
-
-	metrics = [{**d, "mfl_code": manifest_data["mfl_code"]} for d in facility_metrics]
-	metrics = [{**d, "created_at": datetime.now()} for d in metrics]
-	metrics = [{**d, "is_current": True} for d in metrics]
-
-	FacilityMetrics.update_many({"mfl_code": manifest_data["mfl_code"]}, {"$set": {"is_current": False}})
-	FacilityMetrics.insert_many(metrics)
+	
+	#save facility metrics
+	save_facility_metrics(facility_metrics, manifest_data["mfl_code"])
 
 	Log.update_one({"id": log_id}, {"$set": {"processed_at": datetime.now(), "processed": True}})
 	# Acknowledge the message
@@ -156,8 +152,16 @@ async def consume_messages():
 	# Start consuming messages from the queue
 	await queue.consume(process_message)
 
-#Get docket _ids and extract_ids
 async def get_docket(cargo):
+	"""
+    Get or create a docket & extract associated with the given cargo in the manifest.
+
+    Args:
+        cargo (dict): Cargo information containing the Extract(Cargo) name and docket ID.
+
+    Returns:
+        dict: Dictionary containing "extractId" and "_id" of the docket.
+    """
 	pipeline = [
 		{
 			"$match": { "extracts.name": cargo["Name"] }
@@ -213,3 +217,27 @@ async def get_docket(cargo):
 			"extractId": obj_id,
 			"_id": next(docket_info)["_id"]
 		}
+
+def save_facility_metrics(facility_metrics, mfl_code):
+	"""
+    Save facility metrics to the database.
+
+    Args:
+        facility_metrics (list of dict): List of facility metrics, each represented as a dictionary.
+        mfl_code (str): MFL code associated with the facility.
+
+    Returns:
+        None
+    """
+	#Remove any duplicates from facility_metrics
+	unique_facility_metrics = [dict(t) for t in {tuple(d.items()) for d in facility_metrics}]
+	#Extract metric names found
+	metric_names = [metric["metric"] for metric in unique_facility_metrics]
+	# Add missing columns 
+	metrics = [{**d, "mfl_code": mfl_code} for d in unique_facility_metrics]
+	metrics = [{**d, "created_at": datetime.now()} for d in metrics]
+	metrics = [{**d, "is_current": True} for d in metrics]
+	#Update current facility metrics where the metricname and mflcode match 
+	FacilityMetrics.update_many({"mfl_code": mfl_code, "metric": {"$in": metric_names}}, {"$set": {"is_current": False}}) 
+	#Insert the new facility metrics
+	FacilityMetrics.insert_many(metrics)
