@@ -5,6 +5,7 @@ from bson import ObjectId
 from app.config.config import settings
 from app.database import Manifests, Dockets, FacilityMetrics, Log, client
 from app import schemas
+
 ## TODO:: FIND A WAY TO SAVE MISSING AND FIND A WAY TO SAVE DIFFERENTIAL
 async def process_message(message: Message):
 	# Process the received message
@@ -43,7 +44,6 @@ async def process_message(message: Message):
 				)
 			if metric["Type"] != 0 and metric["Name"] == "AppMetrics":
 				value = metric["Value"]
-
 				value = json.loads(value)
 				log_value = json.loads(value["LogValue"])
 				value["LogValue"] = log_value
@@ -58,38 +58,8 @@ async def process_message(message: Message):
 						"value": log_value["Version"]
 					})
 					for cargo in log_value["ExtractCargos"]:
-						pipeline = [
-							{
-								"$match": { "extracts.name": cargo["Name"] }
-							},
-							{
-								"$project": {
-								"_id": 1,
-								"extractId": {
-									"$filter": {
-										"input": "$extracts",
-										"cond": { "$eq": ["$$this.name", cargo["Name"]] }
-									}
-								}
-								}
-							},
-							{
-								"$project": {
-									"_id": 1,
-									"extractId": { "$arrayElemAt": ["$extractId.id", 0] }
-								}
-							}
-						]
-						docket = Dockets.aggregate(pipeline)
-						try:
-							docket = next(docket)
-						except StopIteration:
-							# Handle the case when there are no results
-							docket = {
-								"extractId":cargo["Name"],
-								"_id":None,
-							}
-							print("No results found.")
+						docket = await get_docket(cargo)
+						# print(docket)
 						stats_data.append(
 							{
 								"expected": cargo["Stats"],
@@ -105,6 +75,7 @@ async def process_message(message: Message):
 			try:
 				# Add extra columns
 				manifest_data["created_at"] = datetime.now()
+				manifest_data["updated_at"] = datetime.now()
 
 				validated_data = schemas.ManifestsSchema(**manifest_data)
 
@@ -184,3 +155,61 @@ async def consume_messages():
 
 	# Start consuming messages from the queue
 	await queue.consume(process_message)
+
+#Get docket _ids and extract_ids
+async def get_docket(cargo):
+	pipeline = [
+		{
+			"$match": { "extracts.name": cargo["Name"] }
+		},
+		{
+			"$project": {
+			"_id": 1,
+			"extractId": {
+				"$filter": {
+					"input": "$extracts",
+					"cond": { "$eq": ["$$this.name", cargo["Name"]] }
+				}
+			}
+			}
+		},
+		{
+			"$project": {
+				"_id": 1,
+				"extractId": { "$arrayElemAt": ["$extractId.id", 0] }
+			}
+		}
+	]
+	docket = Dockets.aggregate(pipeline)
+	try:
+		docket = next(docket)
+		return docket
+	except StopIteration:
+		# Handle the case when there are no results
+		print("No results found.")
+		obj_id = str(ObjectId())
+		extract = {
+			"id": obj_id, 
+			"name": cargo["Name"],
+			"display": cargo["Name"], 
+			"isPatient": False, print
+			"rank": 30
+		}
+
+		Dockets.update_one(
+			{ "name": cargo["DocketId"] },
+			{ "$push": {"extracts": extract} }
+		)
+		docket_info = Dockets.aggregate([
+			{
+				"$match": { "name": cargo["DocketId"] }
+			},
+			{
+				"$project": {"_id": 1}
+			}
+		])
+
+		return {
+			"extractId": obj_id,
+			"_id": next(docket_info)["_id"]
+		}

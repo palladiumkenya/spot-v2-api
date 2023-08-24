@@ -63,14 +63,14 @@ async def process_message(message: Message):
 				if 'TotalExtractsStaged' in body_data:
 					# Update where document matches
 					Extracts.update_one(
-						{"mfl_code": body_data["SiteCode"], "is_current": True, "extract_id": docket_info["extractId"], "docket_id": docket_info["_id"], "manifest_id": body_data["ManifestId"] },
+						{"mfl_code": body_data["SiteCode"], "extract_id": docket_info["extractId"], "docket_id": docket_info["_id"], "manifest_id": body_data["ManifestId"] },
 						{"$inc": {"received": body_data["TotalExtractsStaged"]}, "$set": {"updated_at": datetime.now(), "receivedDate": datetime.now()}}, 
 						upsert=True
 					)
 				if 'TotalExtractsProcessed' in body_data:
 					# Update where document matches
 					Extracts.update_one(
-						{"mfl_code": body_data["SiteCode"], "is_current": True, "extract_id": docket_info["extractId"], "docket_id": docket_info["_id"], "manifest_id": body_data["ManifestId"] },
+						{"mfl_code": body_data["SiteCode"], "extract_id": docket_info["extractId"], "docket_id": docket_info["_id"], "manifest_id": body_data["ManifestId"] },
 						{"$inc": {"queued": body_data["TotalExtractsProcessed"]}, "$set": {"updated_at": datetime.now(), "queuedDate": datetime.now()}}, 
 						upsert=True
 					)
