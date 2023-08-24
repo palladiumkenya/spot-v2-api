@@ -192,7 +192,7 @@ async def get_docket(cargo):
 			"id": obj_id, 
 			"name": cargo["Name"],
 			"display": cargo["Name"], 
-			"isPatient": False, print
+			"isPatient": False,
 			"rank": 30
 		}
 
