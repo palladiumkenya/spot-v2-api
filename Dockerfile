@@ -29,7 +29,7 @@ COPY cron_script.sh /app
 RUN chmod +x /app/cron_script.sh
 
 # Set up cron job
-RUN crontab /app/crontab.txt
+#RUN crontab /app/crontab.txt
 
 # Command to run the application and start the cron job
 CMD /app/cron_script.sh && uvicorn app.main:app --host 0.0.0.0 --port 2121
