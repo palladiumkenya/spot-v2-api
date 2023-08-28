@@ -126,7 +126,8 @@ async def process_message(message: Message):
 		return
 	
 	#save facility metrics
-	save_facility_metrics(facility_metrics, manifest_data["mfl_code"])
+	if len(facility_metrics) > 0:
+		save_facility_metrics(facility_metrics, manifest_data["mfl_code"])
 
 	Log.update_one({"id": log_id}, {"$set": {"processed_at": datetime.now(), "processed": True}})
 	# Acknowledge the message
