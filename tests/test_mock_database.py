@@ -15,10 +15,8 @@ class MockNotices:
         self._data = [
             {"_id": "1", "rank": 1, "level": 1, "title": "Title 1", "message": "Message 1"},
             {"_id": "2", "rank": 2, "level": 2, "title": "Title 2", "message": "Message 2"},
-            # ... add more mock data here
         ]
 
     def aggregate(self, pipeline):
         return self._data
 
-# You can add more mock classes and methods as needed for your tests
