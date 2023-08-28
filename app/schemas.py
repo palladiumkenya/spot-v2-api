@@ -75,9 +75,7 @@ class ManifestsSchema(BaseModel):
     docket_id: Optional[ObjectId] = None
     extract_id: str
     session: str
-    received: Optional[int] = None
     expected: Optional[int] = 0
-    queued: Optional[int] = None
     start: datetime
     end: Optional[datetime] = None
     receivedDate: Optional[datetime] = None
