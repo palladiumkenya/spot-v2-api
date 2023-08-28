@@ -4,7 +4,6 @@ import ssl
 from fastapi import Depends, HTTPException, status
 from app.database import Facility
 from datetime import datetime
-from pymongo.errors import DuplicateKeyError
 
 url = 'https://prod.kenyahmis.org:7001/facilities/get_mfl_data/all'
 
