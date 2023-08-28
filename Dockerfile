@@ -16,8 +16,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the application code
 COPY . .
 
-# Install curl
-RUN apt-get update && apt-get install -y curl
+# Install curl and ODBC
+RUN apt-get update && apt-get install -y curl unixodbc
 
 # Expose the port
 EXPOSE 4141
@@ -29,7 +29,7 @@ COPY cron_script.sh /app
 RUN chmod +x /app/cron_script.sh
 
 # Set up cron job
-# RUN crontab /app/crontab.txt
+RUN crontab /app/crontab.txt
 
 # Command to run the application and start the cron job
 CMD /app/cron_script.sh && uvicorn app.main:app --host 0.0.0.0 --port 2121
