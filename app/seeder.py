@@ -4,7 +4,6 @@ import random
 from app import schemas
 from app import database
 
-
 def seed_dockets(data):
     # Check if the collection is empty
     if database.Dockets.count_documents({}) == 0:
@@ -23,7 +22,6 @@ def seed_dockets(data):
     else:
         print("Dockets table already contains data. Skipping seed.")
 
-
 def seed_indicators(data):
     # Check if the collection is empty
     if database.Indicators.count_documents({}) == 0:
@@ -36,7 +34,6 @@ def seed_indicators(data):
     else:
         print("Indicators table already contains data. Skipping seed.")
 
-
 def seed_notices(data):
     # Check if the collection is empty
     if database.Notices.count_documents({}) == 0:
@@ -48,7 +45,6 @@ def seed_notices(data):
         print("Notices data seeded successfully.")
     else:
         print("Notices table already contains data. Skipping seed.")
-
 
 def seed_manifest(data):
     # Check if the collection is empty
@@ -133,9 +129,9 @@ def create_profiles():
             {
                 "$group": {
                     "_id": {
-						"facility": "$facility_info._id",
-						"docket": "$docket_info._id"
-					},  # Group by facility's _id & docket's _id
+                        "facility": "$facility_info._id",
+                        "docket": "$docket_info._id"
+                    },  # Group by facility's _id & docket's _id
                     "facility": {"$first": "$facility_info.name"},
                     "mfl_code": {"$first": "$facility_info.mfl_code"},
                     "partner": {"$first": "$facility_info.partner"},
@@ -146,7 +142,9 @@ def create_profiles():
                     "updated_at": {"$first": {"$ifNull": ["$extracts.updated_at", "$created_at"]}},
                     "totalExpected": {"$sum": {"$ifNull": ["$expected", 0]}},
                     "totalReceived": {"$sum": {"$ifNull": ["$extracts.received", 0]}},
-                    "totalQueued": {"$sum": {"$ifNull": ["$extracts.queued", 0]}}
+                    "totalQueued": {"$sum": {"$ifNull": ["$extracts.queued", 0]}},
+                    "log_date": {"$first": "$log_date"},
+                    "upload_mode": {"$first": "$upload_mode"},
                 }
             },
             {
@@ -173,6 +171,33 @@ def create_profiles():
                 }
             },
             {
+                "$addFields": {
+                    "upload_mode": {
+                        "$switch": {
+                            "branches": [
+                                {
+                                    "case": {"$eq": ["$upload_mode", 0]},
+                                    "then": "Full"
+                                },
+                                {
+                                    "case": {"$eq": ["$upload_mode", 1]},
+                                    "then": "Differential"
+                                },
+                                {
+                                    "case": {"$eq": ["$upload_mode", 2]},
+                                    "then": "Differential Load"
+                                },
+                                {
+                                    "case": {"$eq": ["$upload_mode", 3]},
+                                    "then": "Boardroom"
+                                }
+                            ],
+                            "default": ""
+                        }
+                    }
+                }
+            },
+            {
                 "$project": {
                     "_id": 0,
                     "facility": 1,
@@ -187,6 +212,8 @@ def create_profiles():
                     "totalExpected": 1,
                     "totalReceived": 1,
                     "totalQueued": 1,
+                    "log_date": 1,
+                    "upload_mode": 1
                 }
             },
             {

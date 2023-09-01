@@ -11,7 +11,9 @@ def profileEntity(profile) -> dict:
         "totalExpected": profile["totalExpected"],
         "totalQueued": profile["totalQueued"],
         "status": profile["status"],
-        "updated": profile["updated_at"]
+        "updated": profile["updated_at"],
+        "log_date": profile["log_date"],
+        "upload_mode": profile["upload_mode"],
     }
 
 def profileListEntity(profiles) -> list:
