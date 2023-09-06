@@ -14,7 +14,7 @@ def get_refresh_date(db):
 
 
 @router.get("/")
-async def get_facility_metrics(db: Session = Depends(get_db)):
+async def get_update_dwh_refresh_date(db: Session = Depends(get_db)):
 	notice = Notices.find_one({"title": "DWH REFRESH"})["message"]
 
 	last_refresh_date = get_refresh_date(db)

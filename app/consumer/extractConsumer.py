@@ -3,11 +3,10 @@ from datetime import datetime
 import json
 from bson import ObjectId
 from app.config.config import settings
-from app.database import Dockets, Extracts, Log, client
+from app.database import Dockets, Extracts, Log, Manifests, client
 from app.logger import logger
 
 
-## TODO: ASK FOR MANIFEST_ID IF POSSIBLE
 async def process_message(message: Message):
 	# Process the received message
 	body = message.body.decode()
@@ -61,12 +60,20 @@ async def process_message(message: Message):
 				rollback = False
 
 				if 'TotalExtractsStaged' in body_data:
-					# Update where document matches
-					Extracts.update_one(
-						{"mfl_code": body_data["SiteCode"], "extract_id": docket_info["extractId"], "docket_id": docket_info["_id"], "manifest_id": body_data["ManifestId"] },
-						{"$inc": {"received": body_data["TotalExtractsStaged"]}, "$set": {"updated_at": datetime.now(), "receivedDate": datetime.now()}}, 
-						upsert=True
-					)
+					# Data isnt staged in differential Load so what is processed is equal to what is uploaded. Rather processing while uploading.
+					if body_data['upload_mode'] == 2:
+						Extracts.update_one(
+							{"mfl_code": body_data["SiteCode"], "extract_id": docket_info["extractId"], "docket_id": docket_info["_id"], "manifest_id": body_data["ManifestId"] },
+							{"$inc": {"received": body_data["TotalExtractsProcessed"]}, "$set": {"updated_at": datetime.now(), "receivedDate": datetime.now()}}, 
+							upsert=True
+						)
+					else:
+						# Update where document matches
+						Extracts.update_one(
+							{"mfl_code": body_data["SiteCode"], "extract_id": docket_info["extractId"], "docket_id": docket_info["_id"], "manifest_id": body_data["ManifestId"] },
+							{"$inc": {"received": body_data["TotalExtractsStaged"]}, "$set": {"updated_at": datetime.now(), "receivedDate": datetime.now()}}, 
+							upsert=True
+						)
 				if 'TotalExtractsProcessed' in body_data:
 					# Update where document matches
 					Extracts.update_one(
