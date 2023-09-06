@@ -58,12 +58,7 @@ def start_background_tasks():
 
     # Seed the data into the database
     seeder.seed()
-
-    # Schedule the task to run every 4 hrs
-    ## TODO: LOOK FOR EFFICIENT WAY
-    cron = aiocron.crontab('0 */4 * * *', func=get_all_facilities)
     asyncio.sleep(1)
-    cron.start()
 
 # ...other routes and application code...
 app.include_router(mockapis.router)

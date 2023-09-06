@@ -374,7 +374,7 @@ notices = [
         "title": ""
     },
     {
-        "message": "The last refresh was on Tue Jun 20 2023",
+        "message": "The last refresh was on Aug 17, 2023",
         "rank": 1,
         "level": 2,
         "title": "DWH REFRESH"
