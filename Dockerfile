@@ -1,6 +1,9 @@
 # Base image
 FROM python:3.9-slim
 
+#Specifying timezone
+ENV TZ=Africa/Nairobi
+
 # Install cron and git
 RUN apt-get update && apt-get install -y cron git
 
