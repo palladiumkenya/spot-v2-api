@@ -61,7 +61,7 @@ async def process_message(message: Message):
 
 				if 'TotalExtractsStaged' in body_data:
 					# Data isnt staged in differential Load so what is processed is equal to what is uploaded. Rather processing while uploading.
-					if body_data['UploadMode'] == 2:
+					if 'UploadMode' in body_data and body_data['UploadMode'] == 2:
 						Extracts.update_one(
 							{"mfl_code": body_data["SiteCode"], "extract_id": docket_info["extractId"], "docket_id": docket_info["_id"], "manifest_id": body_data["ManifestId"] },
 							{"$inc": {"received": body_data["TotalExtractsProcessed"]}, "$set": {"updated_at": datetime.now(), "receivedDate": datetime.now()}}, 

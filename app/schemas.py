@@ -76,7 +76,7 @@ class ManifestsSchema(BaseModel):
     extract_id: str
     session: str
     expected: Optional[int] = 0
-    start: datetime
+    start: Optional[datetime] = None
     end: Optional[datetime] = None
     receivedDate: Optional[datetime] = None
     queuedDate: Optional[datetime] = None
