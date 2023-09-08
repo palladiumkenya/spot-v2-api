@@ -1,6 +1,4 @@
 from bson import ObjectId
-from datetime import datetime
-import random
 from app import schemas
 from app import database
 
@@ -22,18 +20,6 @@ def seed_dockets(data):
     else:
         print("Dockets table already contains data. Skipping seed.")
 
-def seed_indicators(data):
-    # Check if the collection is empty
-    if database.Indicators.count_documents({}) == 0:
-        # Iterate over the data and insert each item into the collection
-        for item in data:
-            schema = schemas.IndicatorsBaseSchema(**item)
-            database.Indicators.insert_one(schema.dict())
-
-        print("Indicators data seeded successfully.")
-    else:
-        print("Indicators table already contains data. Skipping seed.")
-
 def seed_notices(data):
     # Check if the collection is empty
     if database.Notices.count_documents({}) == 0:
@@ -45,23 +31,6 @@ def seed_notices(data):
         print("Notices data seeded successfully.")
     else:
         print("Notices table already contains data. Skipping seed.")
-
-def seed_manifest(data):
-    # Check if the collection is empty
-    if database.Manifests.count_documents({}) == 0:
-        docket = database.Dockets.aggregate([{"$sample": {"size": 1}}]).next()
-        extract_definitions = docket["extracts"]
-        # Iterate over the data and insert each item into the collection
-        for item in data:
-            # Assign a random extract ID as the extract_id
-            random_extract = random.choice(extract_definitions)["id"]
-            # Create the ManifestsSchema object with the random docket_id
-            schema = schemas.ManifestsSchema(
-                **item, docket_id=ObjectId(docket["_id"]), extract_id=random_extract)
-            database.Manifests.insert_one(schema.dict())
-        print("Manifests data seeded successfully.")
-    else:
-        print("Manifests table already contains data. Skipping seed.")
 
 def create_profiles():
     if "profiles_vw" not in database.db.list_collection_names():
@@ -381,23 +350,8 @@ notices = [
     }
 ]
 
-manifests = [
-    {
-        "manifest_id": str(ObjectId()),
-        "mfl_code": 12663,
-        "session": str(ObjectId()),
-        "received": 240,
-        "start": datetime.now(),
-        "end": datetime.now(),
-        "is_current": False
-    }
-]
-
-
 def seed():
     # Seed the data into the database
     seed_dockets(dockets)
-    seed_indicators(indicators)
     seed_notices(notices)
-    seed_manifest(manifests)
     create_profiles()
