@@ -129,9 +129,11 @@ async def process_message(message: Message):
 		if len(facility_metrics) > 0:
 			save_facility_metrics(facility_metrics, manifest_data["mfl_code"])
 
-	if "metrics" in body_data:
-		for metric in body_data["metrics"]:
-			handle_metrics(metric)
+	else:
+		try:
+			await handle_manifests(body_data)
+		except:
+			await message.reject()
 	Log.update_one({"id": log_id}, {"$set": {"processed_at": datetime.now(), "processed": True}})
 	# Acknowledge the message
 	await message.ack()
@@ -155,6 +157,182 @@ async def consume_messages():
 	# Start consuming messages from the queue
 	await queue.consume(process_message)
 
+def save_facility_metrics(facility_metrics, mfl_code):
+	"""
+    Save facility metrics to the database.
+
+    Args:
+        facility_metrics (list of dict): List of facility metrics, each represented as a dictionary.
+        mfl_code (str): MFL code associated with the facility.
+
+    Returns:
+        None
+    """
+	#Remove any duplicates from facility_metrics
+	unique_facility_metrics = [dict(t) for t in {tuple(d.items()) for d in facility_metrics}]
+	#Extract metric names found
+	metric_names = [metric["metric"] for metric in unique_facility_metrics]
+	# Add missing columns 
+	metrics = [{**d, "mfl_code": mfl_code} for d in unique_facility_metrics]
+	metrics = [{**d, "created_at": datetime.now()} for d in metrics]
+	metrics = [{**d, "is_current": True} for d in metrics]
+	#Update current facility metrics where the metricname and mflcode match 
+	FacilityMetrics.update_many({"mfl_code": mfl_code, "metric": {"$in": metric_names}}, {"$set": {"is_current": False}}) 
+	#Insert the new facility metrics
+	FacilityMetrics.insert_many(metrics)
+
+## TODO: Maybe handle this when they arent available in manifest
+def handle_metrics(metric):
+	cargo = json.loads(metric["Cargo"])
+	return
+
+async def handle_manifests(manifest):
+	"""
+    Handle manifest data and update the database with the provided manifest information for MNCH, HTS and PREP Dockets.
+    
+    Parameters:
+    manifest (dict): A dictionary containing manifest data to be processed.
+
+    Returns:
+    None
+
+    Raises:
+    - KeyError: If the provided manifest dictionary is missing required keys.
+    - ValueError: If there is an issue with the JSON format within the manifest data.
+    
+    Notes:
+    - This function assumes the presence of specific keys in the manifest dictionary, and it may raise KeyError if any of these keys are missing.
+    - The manifest dictionary should contain information about the manifest, including manifest ID, site code, upload mode, EMR setup, metrics, and other relevant data.
+    - The function processes the metrics within the manifest and extracts specific information for database insertion.
+    - It performs database transactions to update and insert data in the database.
+    - Rollback is performed if any exception occurs during database operations.
+    - Facility metrics and statistics data are processed and saved separately in the database.
+    - The function uses the `save_facility_metrics` function to save facility metrics.
+    
+    """
+	try:
+		manifest_data = {
+			"manifest_id": manifest["ManifestId"],
+			"mfl_code": manifest["SiteCode"],
+			"upload_mode": manifest["UploadMode"],
+			"emr_setup": manifest["EmrSetup"],
+			"is_current": True
+			# "status": body_data["Status"],
+		}
+		facility_metrics = []
+		stats_data = []
+		for metric in manifest["Metrics"]:
+			if metric["Type"] == 0:
+				continue
+			value = metric["Items"]
+			print(value)
+			value = json.loads(value)
+			if metric["Type"] == 1:
+				facility_metrics.extend(
+					(
+						{"metric": "EMR Version", "value": value["EmrVersion"]},
+						{"metric": "EMR Type", "value": value["EmrName"]},
+					)
+				)
+			elif metric["Type"] != 0:
+				log_value = json.loads(value["LogValue"])
+				value["LogValue"] = log_value
+				lookup = {
+					"HTS": {
+						"name": "HivTestingService",
+						"start": "HTSSendStart",
+						"end": "HTSSendEnd"
+					},
+					"MNCH": {
+						"name": "MNCH",
+						"start": "MNCHSendStart",
+						"end": "MNCHSendEnd"
+					},
+					"PREP": {
+						"name": "PREP",
+						"start": "PREPSendStart",
+						"end": "PREPSendEnd"
+					}
+				}
+				current_manifest = lookup[manifest["Docket"]]
+				if log_value["Name"] == current_manifest["start"]:
+					manifest_data["start"] = log_value["Start"]
+					manifest_data["session"] = log_value["Session"]
+				elif log_value["Name"] == current_manifest["start"]:
+					manifest_data["end"] = log_value["End"]
+				elif "ExtractCargos" in log_value and isinstance(log_value["ExtractCargos"], list) and value["Name"] == current_manifest["name"]:
+					facility_metrics.append({
+						"metric": "DWAPI Version",
+						"value": log_value["Version"]
+					})
+					for cargo in log_value["ExtractCargos"]:
+						docket = await get_docket(cargo)
+						# print(docket)
+						stats_data.append(
+							{
+								"expected": cargo["Stats"],
+								"docket_id": docket["_id"],
+								"extract_id": docket["extractId"],
+								"log_date": value["LogDate"],
+							}
+						)
+
+		for stat in stats_data:
+			manifest_data |= stat
+			try:
+				# Add extra columns
+				manifest_data["created_at"] = datetime.now()
+				manifest_data["updated_at"] = datetime.now()
+
+				validated_data = schemas.ManifestsSchema(**manifest_data)
+
+				# Start a MongoDB session for transactions
+				with client.start_session() as session:
+					# Start a transaction
+					session.start_transaction()
+
+					try:
+						# Perform rollback on failure flag
+						rollback = False
+
+						# Iterate over matching documents and update is_current to false
+
+						Manifests.update_many(
+							{"mfl_code": manifest_data["mfl_code"], "is_current": True, "extract_id": manifest_data["extract_id"] },
+							{"$set": {"is_current": False}}
+						)
+						# Insert new document with is_current set to true
+						Manifests.insert_one(validated_data.dict())
+
+						# Commit the transaction
+						session.commit_transaction()
+
+					except Exception:
+						# Rollback the transaction if any exception occurs
+						session.abort_transaction()
+						rollback = True
+
+					finally:
+						# End the session
+						session.end_session()
+
+				# Check if rollback occurred
+				if rollback:
+					print("Insertion failed. Rollback performed.")
+				else:
+					print("Insertion successful. Updated matching documents.")
+
+			except Exception as e:
+				print("Invalid message format:", e)
+				return
+	except KeyError as e:
+		print("Invalid JSON format:", e)
+		return
+	#save facility metrics
+	if len(facility_metrics) > 0:
+		save_facility_metrics(facility_metrics, manifest_data["mfl_code"])
+	return
+
 async def get_docket(cargo):
 	"""
     Get or create a docket & extract associated with the given cargo in the manifest.
@@ -165,6 +343,7 @@ async def get_docket(cargo):
     Returns:
         dict: Dictionary containing "extractId" and "_id" of the docket.
     """
+	cargo = {key.lower(): value for key, value in cargo.items()}
 	pipeline = [
 		{
 			"$match": { "extracts.name": cargo["name"] }
@@ -220,32 +399,3 @@ async def get_docket(cargo):
 			"extractId": obj_id,
 			"_id": next(docket_info)["_id"]
 		}
-
-def save_facility_metrics(facility_metrics, mfl_code):
-	"""
-    Save facility metrics to the database.
-
-    Args:
-        facility_metrics (list of dict): List of facility metrics, each represented as a dictionary.
-        mfl_code (str): MFL code associated with the facility.
-
-    Returns:
-        None
-    """
-	#Remove any duplicates from facility_metrics
-	unique_facility_metrics = [dict(t) for t in {tuple(d.items()) for d in facility_metrics}]
-	#Extract metric names found
-	metric_names = [metric["metric"] for metric in unique_facility_metrics]
-	# Add missing columns 
-	metrics = [{**d, "mfl_code": mfl_code} for d in unique_facility_metrics]
-	metrics = [{**d, "created_at": datetime.now()} for d in metrics]
-	metrics = [{**d, "is_current": True} for d in metrics]
-	#Update current facility metrics where the metricname and mflcode match 
-	FacilityMetrics.update_many({"mfl_code": mfl_code, "metric": {"$in": metric_names}}, {"$set": {"is_current": False}}) 
-	#Insert the new facility metrics
-	FacilityMetrics.insert_many(metrics)
-
-## TODO: Maybe handle this when they arent available in manifest
-def handle_metrics(metric):
-	cargo = json.loads(metric["Cargo"])
-	return
