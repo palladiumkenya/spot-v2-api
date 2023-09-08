@@ -30,6 +30,7 @@ Profiles = db.profiles_vw
 Handshake = db.handshake
 Log = db.messages_log
 Error = db.error_log
+DebugLog = db.debug_log
 
 ## MSSQL Connections
 SQL_DATABASE_URL = f'mssql+pymssql://{settings.DB_MSSQL_USERNAME}:{settings.DB_MSSQL_PASS}@{settings.DB_MSSQL_HOST}:1433/{settings.DB_MSSQL}'
