@@ -31,7 +31,6 @@ async def process_message(message: Message):
 				"upload_mode": body_data["UploadMode"],
 				"emr_setup": body_data["EmrSetup"],
 				"is_current": True
-				# "status": body_data["Status"],
 			}
 			stats_data = []
 			facility_metrics.extend(
@@ -71,7 +70,6 @@ async def process_message(message: Message):
 
 			for stat in stats_data:
 				manifest_data |= stat
-				print(manifest_data)
 				try:
 					# Add extra columns
 					manifest_data["created_at"] = datetime.now()
@@ -111,9 +109,9 @@ async def process_message(message: Message):
 
 					# Check if rollback occurred
 					if rollback:
-						print("Insertion failed. Rollback performed.")
+						print(f"---INSERTING MANIFEST Extract {manifest_data['extract_id']} SiteCode: {manifest_data['mfl_code']} FAILED. Rollback performed.---")
 					else:
-						print("Insertion successful. Updated matching documents.")
+						print(f"+++INSERTING MANIFEST Extract {manifest_data['extract_id']} SiteCode: {manifest_data['mfl_code']} SUCCESSFUL. Rollback performed.+++")
 
 				except Exception as e:
 					print("Invalid message format:", e)
@@ -318,9 +316,9 @@ async def handle_manifests(manifest):
 
 				# Check if rollback occurred
 				if rollback:
-					print("Insertion failed. Rollback performed.")
+					print(f"---INSERTING MANIFEST Extract {manifest_data['extract_id']} SiteCode: {manifest_data['mfl_code']} FAILED. Rollback performed.---")
 				else:
-					print("Insertion successful. Updated matching documents.")
+					print(f"+++INSERTING MANIFEST Extract {manifest_data['extract_id']} SiteCode: {manifest_data['mfl_code']} SUCCESSFUL. Rollback performed.+++")
 
 			except Exception as e:
 				print("Invalid message format:", e)
