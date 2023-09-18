@@ -111,7 +111,7 @@ async def process_message(message: Message):
 					if rollback:
 						print(f"---INSERTING MANIFEST Extract {manifest_data['extract_id']} SiteCode: {manifest_data['mfl_code']} FAILED. Rollback performed.---")
 					else:
-						print(f"+++INSERTING MANIFEST Extract {manifest_data['extract_id']} SiteCode: {manifest_data['mfl_code']} SUCCESSFUL. Rollback performed.+++")
+						print(f"+++INSERTING MANIFEST Extract {manifest_data['extract_id']} SiteCode: {manifest_data['mfl_code']} SUCCESSFUL.+++")
 
 				except Exception as e:
 					print("Invalid message format:", e)
@@ -318,7 +318,7 @@ async def handle_manifests(manifest):
 				if rollback:
 					print(f"---INSERTING MANIFEST Extract {manifest_data['extract_id']} SiteCode: {manifest_data['mfl_code']} FAILED. Rollback performed.---")
 				else:
-					print(f"+++INSERTING MANIFEST Extract {manifest_data['extract_id']} SiteCode: {manifest_data['mfl_code']} SUCCESSFUL. Rollback performed.+++")
+					print(f"+++INSERTING MANIFEST Extract {manifest_data['extract_id']} SiteCode: {manifest_data['mfl_code']} SUCCESSFUL.+++")
 
 			except Exception as e:
 				print("Invalid message format:", e)
