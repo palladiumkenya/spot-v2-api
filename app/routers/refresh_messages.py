@@ -17,7 +17,7 @@ async def trigger_manifest_fix():
             "$match": {
                 "queue": "manifest.queue",
                 "created_at": {"$gte": ten_minutes_ago},
-                "retry": { "$exists": False }
+                "retry": { "$gte": 1 }
             }
         },
         {
