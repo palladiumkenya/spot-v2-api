@@ -14,7 +14,7 @@ async def process_message(message: Message):
 	facility_metrics = []
 
 	log_id = ObjectId()
-	Log.insert_one({"id": log_id, "body": body, "processed": False, "created_at": datetime.now(),  "queue": "manifest.queue"})
+	Log.update_one(
 			{"body": body},
 			{"$set" : {"id": log_id, "body": body, "processed": False, "created_at": datetime.now(),  "queue": "manifest.queue", "retry": 0}},
 			upsert=True
