@@ -129,7 +129,7 @@ async def process_message(message: Message):
 
 	else:
 		try:
-			await handle_manifests(body_data)
+			await handle_manifests(body_data, message)
 		except:
 			await message.reject()
 	Log.update_one({"id": log_id}, {"$set": {"processed_at": datetime.now(), "processed": True}})
@@ -184,7 +184,7 @@ def handle_metrics(metric):
 	cargo = json.loads(metric["Cargo"])
 	return
 
-async def handle_manifests(manifest):
+async def handle_manifests(manifest, message):
 	"""
     Handle manifest data and update the database with the provided manifest information for MNCH, HTS and PREP Dockets.
     
@@ -324,7 +324,8 @@ async def handle_manifests(manifest):
 				print("Invalid message format:", e)
 				return
 	except KeyError as e:
-		print("Invalid JSON format:", e)
+		print("Invalid 2 JSON format:", e)
+		await message.ack()
 		return
 	#save facility metrics
 	if len(facility_metrics) > 0:
