@@ -15,6 +15,10 @@ async def process_message(message: Message):
 
 	log_id = ObjectId()
 	Log.insert_one({"id": log_id, "body": body, "processed": False, "created_at": datetime.now(),  "queue": "manifest.queue"})
+			{"body": body},
+			{"$set" : {"id": log_id, "body": body, "processed": False, "created_at": datetime.now(),  "queue": "manifest.queue", "retry": 0}},
+			upsert=True
+		)
 	# Parse the message body as JSON
 	try:
 		body_data = json.loads(body)
@@ -30,7 +34,8 @@ async def process_message(message: Message):
 				"mfl_code": body_data["FacilityCode"],
 				"upload_mode": body_data["UploadMode"],
 				"emr_setup": body_data["EmrSetup"],
-				"is_current": True
+				"is_current": True,
+				"log_id": log_id
 			}
 			stats_data = []
 			facility_metrics.extend(
@@ -129,7 +134,7 @@ async def process_message(message: Message):
 
 	else:
 		try:
-			await handle_manifests(body_data, message)
+			await handle_manifests(body_data, message, log_id)
 		except:
 			await message.reject()
 	Log.update_one({"id": log_id}, {"$set": {"processed_at": datetime.now(), "processed": True}})
@@ -186,7 +191,7 @@ def handle_metrics(metric):
 	cargo = json.loads(metric["Cargo"])
 	return
 
-async def handle_manifests(manifest, message):
+async def handle_manifests(manifest, message, log_id):
 	"""
     Handle manifest data and update the database with the provided manifest information for MNCH, HTS and PREP Dockets.
     
@@ -216,7 +221,8 @@ async def handle_manifests(manifest, message):
 			"mfl_code": manifest["SiteCode"],
 			"upload_mode": manifest["UploadMode"],
 			"emr_setup": manifest["EmrSetup"],
-			"is_current": True
+			"is_current": True,
+			"log_id": log_id
 			# "status": body_data["Status"],
 		}
 		facility_metrics = []

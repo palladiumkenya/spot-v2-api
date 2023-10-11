@@ -122,16 +122,16 @@ def create_profiles():
                         "$switch": {
                             "branches": [
                                 {
-                                    "case": {"$eq": ["$totalQueued", "$totalExpected"]},
-                                    "then": "Processed"
+                                    "case": {"$lt": ["$totalReceived", "$totalExpected"]},
+                                    "then": "Upload In Progress..."
                                 },
                                 {
                                     "case": {"$eq": ["$totalReceived", "$totalExpected"]},
                                     "then": "Queued For Processing"
                                 },
                                 {
-                                    "case": {"$eq": ["$totalReceived", 0]},
-                                    "then": "Upload In Progress..."
+                                    "case": {"$eq": ["$totalQueued", "$totalExpected"]},
+                                    "then": "Processed"
                                 }
                             ],
                             "default": "Upload In Progress..."
