@@ -143,12 +143,14 @@ async def consume_messages():
 	# Create a channel
 	channel = await connection.channel()
 
+	# Set prefetch_count to the desired value
+	await channel.set_qos(prefetch_count=50)
+
 	# Declare the exchange
 	exchange = await channel.declare_exchange("spot.exchange", ExchangeType.DIRECT)
 
 	# Declare the queue and bind it to the exchange
 	queue = await channel.declare_queue("manifest.queue", durable=True)
-	# Set prefetch_count to the desired value
 
 	await queue.bind(exchange, routing_key="manifest.route")
 
