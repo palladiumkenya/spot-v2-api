@@ -10,7 +10,7 @@ router = APIRouter()
 
 @router.get("/manifest/resend")
 async def trigger_manifest_fix():
-    ten_minutes_ago = datetime.now() - timedelta(minutes=100)
+    ten_minutes_ago = datetime.now() - timedelta(minutes=10)
     
     pipeline = [
         {
@@ -153,6 +153,9 @@ async def message_fix(messages):
 
     for m in messages:
         if "manifest" in m["body"] or "ManifestId" in m["body"]:
+            if "retry" in m and m["retry"] > 1:
+                continue
+            print(m["_id"])
             print(m["_id"])
             Log.update_one({"_id": m["_id"]}, {"$inc": {"retry":1}})
             # Declare the queue and bind it to the exchange
