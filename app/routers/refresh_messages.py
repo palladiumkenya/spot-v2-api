@@ -35,6 +35,11 @@ async def trigger_manifest_fix():
             "$match": {
                 "matchingDocs": { "$size": 0 }
             }
+        },
+        {
+            "$sort": {
+                "created_at": 1
+            }
         }
     ]
 
@@ -148,6 +153,7 @@ async def message_fix(messages):
 
     for m in messages:
         if "manifest" in m["body"] or "ManifestId" in m["body"]:
+            print(m["_id"])
             Log.update_one({"_id": m["_id"]}, {"$inc": {"retry":1}})
             # Declare the queue and bind it to the exchange
             queue = await channel.declare_queue("manifest.queue", durable=True)
