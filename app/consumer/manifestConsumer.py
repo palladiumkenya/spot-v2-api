@@ -16,7 +16,7 @@ async def process_message(message: Message):
 	log_id = ObjectId()
 	Log.update_one(
 			{"body": body},
-			{"$set" : {"id": log_id, "body": body, "processed": False, "created_at": datetime.now(),  "queue": "manifest.queue", "retry": 0}},
+			{"$set" : {"id": log_id, "body": body, "processed": False, "created_at": datetime.now(),  "queue": "manifest.queue"}, "$inc": { "retry" : 1 }},
 			upsert=True
 		)
 	# Parse the message body as JSON
