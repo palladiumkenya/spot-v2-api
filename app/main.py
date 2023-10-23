@@ -13,7 +13,6 @@ from app.routers import facility_metrics
 from app.routers import refresh_messages
 from app.routers import bi_directional_communication
 from app.routers import dwh_refresh
-from app.api.facilities import get_all_facilities
 from app import seeder
 # from app.consumer.testConsumer import consume_messages
 from app.consumer import indicatorConsumer
@@ -36,8 +35,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.add_exception_handler(HTTPException, http_error_handler)
-app.add_exception_handler(Exception, tasks_error_handler)
+# app.add_exception_handler(HTTPException, http_error_handler)
+# app.add_exception_handler(Exception, tasks_error_handler)
 
 @app.on_event("startup")
 async def startup_event():
