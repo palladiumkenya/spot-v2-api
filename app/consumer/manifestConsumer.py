@@ -263,7 +263,12 @@ async def handle_manifests(manifest, message, log_id):
 				current_manifest = lookup[manifest["Docket"]]
 				if log_value["Name"] == current_manifest["start"]:
 					manifest_data["start"] = log_value["Start"]
-					manifest_data["session"] = log_value["Session"]
+					if "Session" in log_value:
+						manifest_data["session"] = log_value["Session"]
+					elif "Session" in manifest:
+						manifest_data["session"] = manifest["Session"]
+					else:
+						manifest_data["session"] = "missing"
 				elif log_value["Name"] == current_manifest["start"]:
 					manifest_data["end"] = log_value["End"]
 				elif "ExtractCargos" in log_value and isinstance(log_value["ExtractCargos"], list) and value["Name"] == current_manifest["name"]:
