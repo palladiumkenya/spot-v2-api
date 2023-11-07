@@ -65,7 +65,7 @@ class ProfilesSchema(BaseModel):
     mfl_code: int
     docket_id: str
     stage: str
-    session: str
+    session: Optional[str] = None
     is_current: bool
     created_at: datetime = datetime.now()
 
@@ -74,7 +74,7 @@ class ManifestsSchema(BaseModel):
     mfl_code: int
     docket_id: Optional[ObjectId] = None
     extract_id: str
-    session: str
+    session: Optional[str] = None
     expected: Optional[int] = 0
     start: Optional[datetime] = None
     end: Optional[datetime] = None

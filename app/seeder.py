@@ -126,12 +126,15 @@ def create_profiles():
                                     "then": "Upload In Progress..."
                                 },
                                 {
-                                    "case": {"$eq": ["$totalReceived", "$totalExpected"]},
-                                    "then": "Queued For Processing"
+                                    "case": { "$and": [
+                                        { "$eq": ["$totalQueued", "$totalExpected"] },
+                                        { "$eq": ["$totalReceived", "$totalExpected"] }
+                                    ]},
+                                    "then": "Processed" #only processed if everything is equal to received
                                 },
                                 {
-                                    "case": {"$eq": ["$totalQueued", "$totalExpected"]},
-                                    "then": "Processed"
+                                    "case": {"$eq": ["$totalReceived", "$totalExpected"]},
+                                    "then": "Queued For Processing"
                                 }
                             ],
                             "default": "Upload In Progress..."
