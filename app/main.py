@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import asyncio
 import aiormq
@@ -21,7 +21,10 @@ from app.consumer import extractConsumer
 from app.consumer import handshakeConsumer
 from app.error_handler import *
 
-app = FastAPI()
+app = FastAPI(
+    title = 'SPOT',
+    version = '2.0.0'
+)
 
 origins = [
     "*",

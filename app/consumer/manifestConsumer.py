@@ -186,10 +186,6 @@ def save_facility_metrics(facility_metrics, mfl_code):
 	#Insert the new facility metrics
 	FacilityMetrics.insert_many(metrics)
 
-## TODO: Maybe handle this when they arent available in manifest
-def handle_metrics(metric):
-	cargo = json.loads(metric["Cargo"])
-	return
 
 async def handle_manifests(manifest, message, log_id):
 	"""
