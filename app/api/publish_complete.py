@@ -1,9 +1,5 @@
-from fastapi import FastAPI, BackgroundTasks, Depends
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.triggers.interval import IntervalTrigger
 import aio_pika
 from app.config.config import settings
-from app.database import Profiles, Manifests
 
 RABBITMQ_QUEUE = "completenotice.queue"
 RABBITMQ_ROUTE = "completenotice.route"
