@@ -81,7 +81,7 @@ async def process_message(message: Message):
 						{"$inc": {"queued": body_data["TotalExtractsProcessed"]}, "$set": {"updated_at": datetime.now(), "queuedDate": datetime.now()}}, 
 						upsert=True
 					)
-
+				
 				# Commit the transaction
 				session.commit_transaction()
 
@@ -118,9 +118,9 @@ async def consume_messages():
 
 	# Create a channel
 	channel = await connection.channel()
-	
-	# Set prefetch_count to the desired value increase when more proccessing power is available
-	await channel.set_qos(prefetch_count=10)
+
+	# Set prefetch_count to the desired value
+	await channel.set_qos(prefetch_count=50)
 
 	# Declare the exchange
 	exchange = await channel.declare_exchange("spot.exchange", ExchangeType.DIRECT)

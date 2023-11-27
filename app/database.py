@@ -28,6 +28,7 @@ FacilityMetrics = db.facility_metrics
 FacilityMetrics.create_index([("is_current", pymongo.DESCENDING), ("created_at", pymongo.DESCENDING)])
 Profiles = db.profiles_vw
 Handshake = db.handshake
+SpotError = db.spot_errors
 Log = db.messages_log
 Error = db.error_log
 DebugLog = db.debug_log

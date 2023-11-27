@@ -15,10 +15,7 @@ from app.routers import bi_directional_communication
 from app.routers import dwh_refresh
 from app import seeder
 # from app.consumer.testConsumer import consume_messages
-from app.consumer import indicatorConsumer
-from app.consumer import manifestConsumer
-from app.consumer import extractConsumer
-from app.consumer import handshakeConsumer
+from app.consumer import indicatorConsumer, manifestConsumer, extractConsumer, handshakeConsumer, errorConsumer
 from app.error_handler import *
 
 app = FastAPI(
@@ -52,6 +49,7 @@ def start_background_tasks():
         asyncio.create_task(manifestConsumer.consume_messages())
         asyncio.create_task(extractConsumer.consume_messages())
         asyncio.create_task(handshakeConsumer.consume_messages())
+        asyncio.create_task(errorConsumer.consume_messages())
     except aiormq.AMQPError as e:
         print(f"Error occurred: {type(e).__name__}: {e}")
         print("Retrying connection...")
@@ -60,7 +58,7 @@ def start_background_tasks():
 
     # Seed the data into the database
     seeder.seed()
-    asyncio.sleep(1)
+    # asyncio.sleep(1)
 
 # ...other routes and application code...
 app.include_router(mockapis.router)
