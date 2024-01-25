@@ -389,14 +389,16 @@ async def get_docket(cargo):
 			"isPatient": False,
 			"rank": 30
 		}
+		cargo_lower = {key.lower(): value for key, value in cargo.items()}
 
 		Dockets.update_one(
-			{ "name": cargo["DocketId"] },
+			{"name": cargo_lower["docketid"]},
 			{ "$push": {"extracts": extract} }
 		)
+		
 		docket_info = Dockets.aggregate([
 			{
-				"$match": { "name": cargo["DocketId"] }
+				"$match": {"name": cargo_lower["docketid"]}
 			},
 			{
 				"$project": {"_id": 1}
