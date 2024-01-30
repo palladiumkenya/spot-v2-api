@@ -6,6 +6,7 @@ from app.database import Profiles, Manifests
 
 router = APIRouter()
 
+
 @router.websocket("/dockets/{code}")
 async def get_status(code: int, websocket: WebSocket):
     await websocket.accept()
@@ -22,9 +23,9 @@ async def get_extracts_progress(code: int, websocket: WebSocket):
         {"$lookup": {
             "from": "extracts",
             "let": {
-                    "manifest_id_field": "$manifest_id",
-                    "extract_id_field": "$extract_id",
-                    "mfl_code_field": "$mfl_code",
+                "manifest_id_field": "$manifest_id",
+                "extract_id_field": "$extract_id",
+                "mfl_code_field": "$mfl_code",
             },
             "pipeline": [
                 {
@@ -32,11 +33,11 @@ async def get_extracts_progress(code: int, websocket: WebSocket):
                         "$expr": {
                             "$and": [
                                 {"$eq": ["$manifest_id",
-                                        "$$manifest_id_field"]},
+                                         "$$manifest_id_field"]},
                                 {"$eq": ["$extract_id",
-                                        "$$extract_id_field"]},
+                                         "$$extract_id_field"]},
                                 {"$eq": ["$mfl_code",
-                                        "$$mfl_code_field"]},
+                                         "$$mfl_code_field"]},
                             ],
                         },
                     },
@@ -54,8 +55,8 @@ async def get_extracts_progress(code: int, websocket: WebSocket):
         {"$lookup": {
             "from": "facilities",
             "localField": "mfl_code",
-                    "foreignField": "mfl_code",
-                    "as": "facility_info"
+            "foreignField": "mfl_code",
+            "as": "facility_info"
         }},
         {"$unwind": "$facility_info"},
         {"$lookup": {
@@ -83,8 +84,8 @@ async def get_extracts_progress(code: int, websocket: WebSocket):
         {"$lookup": {
             "from": "dockets",
             "localField": "docket_id",
-                    "foreignField": "_id",
-                    "as": "docket_info"
+            "foreignField": "_id",
+            "as": "docket_info"
         }},
         {"$unwind": "$docket_info"},
         {"$addFields": {
@@ -132,7 +133,7 @@ async def get_extracts_progress(code: int, websocket: WebSocket):
         }},
         {"$sort": {"documents.rank": 1}}
     ]
-    
+
     await websocket.accept()
     while True:
         extracts = manifestStatusListEntity(Manifests.aggregate(pipeline))
