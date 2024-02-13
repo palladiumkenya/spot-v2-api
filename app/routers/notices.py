@@ -1,3 +1,5 @@
+import datetime
+
 from fastapi import APIRouter, BackgroundTasks, Depends
 from sqlalchemy.orm import Session
 from app.serializers.noticeSerializer import noticesListEntity
@@ -25,7 +27,8 @@ async def start_periodic_task(background_tasks: BackgroundTasks):
     for item in manifest:
         if item and item.get("totalExpected") == item.get("totalReceived") == item.get("totalQueued"):
             message = str({"Facility": item['facility'], "MFL Code": item['mfl_code'], "Docket": item['docket'],
-                            "indicator_date": get_period()[2].strftime('%Y-%m-%d'), "Message": "complete!"})
+                           "indicator_date": get_period()[2].strftime('%Y-%m-%d'), "Message": "complete!",
+                           "log_date": datetime.datetime.now().isoformat()})
             
             background_tasks.add_task(send_to_rabbitmq, message)
     return {"message": "Started sending notices"}
