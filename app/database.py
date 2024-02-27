@@ -1,4 +1,3 @@
-from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import mongo_client
 import pymongo
 from sqlalchemy import create_engine, text
